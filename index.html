@@ -135,12 +135,100 @@ main{max-width:900px;margin:0 auto;padding:20px 16px}
   .grade-btn{min-width:60px;padding:6px 10px}
 }
 @media print{nav,#toast{display:none!important}.week-card{break-inside:avoid}}
+
+/* ── RÚBRICA PORTAL ── */
+.rubrica-portal{width:100%;border-collapse:collapse;font-size:12px;border-radius:8px;overflow:hidden}
+.rubrica-portal th{padding:8px 10px;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;color:#fff}
+.rubrica-portal td{padding:8px 10px;border:1px solid #E8EDF5;vertical-align:top;line-height:1.5;font-size:12px}
+.rubrica-portal tr:nth-child(even) td{background:#FAFBFD}
+.rp-criterio{background:var(--azul-cl)!important;font-weight:700;color:var(--azul)}
+
+/* ── CAROUSEL ── */
+.carousel-wrap{position:relative;width:100%;background:#F0F4F8;border-radius:10px;overflow:hidden;border:1px solid var(--border);margin:6px 0}
+.carousel-track{display:flex;transition:transform .3s ease;will-change:transform}
+.carousel-slide{min-width:100%;position:relative}
+.carousel-slide img{width:100%;max-height:320px;object-fit:contain;display:block;background:#F0F4F8;cursor:zoom-in}
+.carousel-prev,.carousel-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;z-index:2;transition:.15s}
+.carousel-prev{left:8px}
+.carousel-next{right:8px}
+.carousel-prev:hover,.carousel-next:hover{background:rgba(0,0,0,.7)}
+.carousel-dots{display:flex;justify-content:center;gap:5px;padding:8px}
+.carousel-dot{width:7px;height:7px;border-radius:50%;background:#DDE3ED;cursor:pointer;transition:.2s;border:none}
+.carousel-dot.active{background:var(--azul);transform:scale(1.2)}
+.carousel-counter{position:absolute;bottom:8px;right:10px;background:rgba(0,0,0,.4);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px}
+
+/* ── LIGHTBOX ── */
+#img-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9000;align-items:center;justify-content:center;cursor:zoom-out}
+#img-lightbox.open{display:flex}
+#img-lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:6px}
+#img-lightbox-close{position:fixed;top:16px;right:20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+
+/* ── MATERIA ICON ── */
+.materia-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.materia-icon svg{width:16px;height:16px}
 </style>
 </head>
 <body>
 <div id="copy-toast">✏️ Escribe en tu cuaderno — el esfuerzo de escribir ayuda a aprender</div>
 
+<!-- Lightbox -->
+<div id="img-lightbox" onclick="closeLightbox()">
+  <img id="img-lightbox-img" src="" alt="">
+  <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
+</div>
+
 <script>
+// ── ICONOS SVG (mismo set que docente.html) ───────────────────────
+const ICONOS_PUB = {
+  cruz:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>`,
+  libro:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+  atomo:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 4 0 010 20M12 2a10 4 0 000 20"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>`,
+  compas:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M8.5 10.5L4 21l8-3 8 3-4.5-10.5"/></svg>`,
+  paleta:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20c1.66 0 2-.79 2-2s-.34-2-2-2H10c-.55 0-1 .45-1 1 0 1.1.9 2 2 2a10 10 0 000-20z"/><circle cx="8" cy="14" r="1" fill="currentColor"/><circle cx="8" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/></svg>`,
+  nota:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  globo:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>`,
+  calc:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>`,
+  flasca:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M9 3v6L4 20h16L15 9V3"/></svg>`,
+  planta:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M12 12C12 7 7 4 3 6c4 0 7 2 9 6M12 12c0-5 5-8 9-6-4 0-7 2-9 6"/></svg>`,
+  gente:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+  bombilla: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8a6 6 0 00-6-6 6 6 0 00-6 6 4.65 4.65 0 001.5 3.5c.75.76 1.23 1.52 1.41 2.5"/></svg>`,
+  corazon:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`,
+  cpu:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>`,
+  estella:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+};
+function getIconoPub(id){ return ICONOS_PUB[id] || ICONOS_PUB.libro; }
+
+// Lightbox
+function openLightbox(src){ document.getElementById('img-lightbox-img').src=src; document.getElementById('img-lightbox').classList.add('open'); }
+function closeLightbox(){ document.getElementById('img-lightbox').classList.remove('open'); document.getElementById('img-lightbox-img').src=''; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeLightbox(); });
+
+// Carousel
+function buildCarousel(imgs, color){
+  if(!imgs||!imgs.length)return '';
+  const id='car-'+Math.random().toString(36).slice(2,8);
+  const slides=imgs.map((url,i)=>
+    `<div class="carousel-slide"><img src="${esc(url)}" alt="Recurso visual ${i+1}" loading="lazy" onclick="openLightbox('${esc(url)}')"><div class="carousel-counter">${i+1}/${imgs.length}</div></div>`
+  ).join('');
+  const dots=imgs.length>1?`<div class="carousel-dots">${imgs.map((_,i)=>`<button class="carousel-dot${i===0?' active':''}" onclick="goSlide('${id}',${i})"></button>`).join('')}</div>`:'';
+  const arrows=imgs.length>1?`<button class="carousel-prev" onclick="goSlide('${id}',-1,true)">‹</button><button class="carousel-next" onclick="goSlide('${id}',1,true)">›</button>`:'';
+  return `<div class="carousel-wrap" id="${id}" data-cur="0" data-total="${imgs.length}">
+    <div class="carousel-track" id="${id}-track">${slides}</div>
+    ${arrows}${dots}
+  </div>`;
+}
+function goSlide(id,val,rel=false){
+  const wrap=document.getElementById(id);
+  if(!wrap)return;
+  const total=parseInt(wrap.dataset.total);
+  let cur=parseInt(wrap.dataset.cur);
+  cur=rel?(cur+val+total)%total:val;
+  wrap.dataset.cur=cur;
+  const track=document.getElementById(id+'-track');
+  if(track)track.style.transform=`translateX(-${cur*100}%)`;
+  wrap.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+}
+
 document.addEventListener('copy',function(e){
   var s=window.getSelection();
   if(s&&s.toString().length>0){e.clipboardData.setData('text/plain','');e.preventDefault();showCopyToast();}
@@ -307,7 +395,7 @@ function renderMateriaBar(){
     <div class="materia-tab${m.id===state.materia?' active':''}"
          style="${m.id===state.materia?'border-bottom-color:'+m.color+';color:'+m.color:''}"
          onclick="selectMateria('${m.id}')">
-      <span>${m.icono||'📚'}</span>
+      <span class="materia-icon" style="color:${m.color||'#1B3A6B'}">${getIconoPub(m.icono)}</span>
       <span>${esc(m.nombre)}</span>
     </div>
   `).join('');
@@ -369,7 +457,7 @@ function renderClaseCard(c){
 
   return `<div class="week-card">
     <div class="week-header" style="background:linear-gradient(135deg,${color},${color}CC)">
-      <div class="materia-badge">${esc(c.materia_icono||'📚')} ${esc(c.materia_nombre||'')}</div>
+      <div class="materia-badge"><span class="materia-icon">${getIconoPub(c.materia_icono)}</span> ${esc(c.materia_nombre||'')}</div>
       <div class="fase-badge">Semana ${c.semana}${c.fase?' · '+esc(c.fase):''}</div>
       <h2>${esc(c.titulo)}</h2>
       <div class="week-meta">${c.subtitulo?esc(c.subtitulo)+' · ':''} ${c.grado} · P${c.periodo}</div>
@@ -451,6 +539,41 @@ function renderClaseCard(c){
       <div class="sec-title" style="color:var(--verde)">Recursos</div>
       <div class="tags">${recursos.map(r=>`<span class="tag">${esc(r)}</span>`).join('')}</div>
     </div>`:''}
+
+    ${(()=>{
+      const imgs=parseJ(c.imagenes,[]);
+      if(!imgs.length)return '';
+      return `<div class="section">
+        <div class="sec-title" style="color:${color}">Recursos visuales</div>
+        ${buildCarousel(imgs, color)}
+      </div>`;
+    })()}
+
+    ${(()=>{
+      const rub=parseJ(c.rubrica,null);
+      if(!rub||!rub.criterios||!rub.criterios.length)return '';
+      const NHEAD=[
+        {l:'Excelente',bg:'#1B5E20'},{l:'Logrado',bg:'#0D47A1'},
+        {l:'En Proceso',bg:'#E65100'},{l:'Inicio',bg:'#B71C1C'},
+      ];
+      const rows=rub.criterios.map(c2=>`<tr>
+        <td class="rp-criterio">${esc(c2.nombre)}</td>
+        <td style="background:#F0FDF4">${esc(c2.niveles?.excelente||'')}</td>
+        <td style="background:#EFF3FF">${esc(c2.niveles?.logrado||'')}</td>
+        <td style="background:#FFF8F0">${esc(c2.niveles?.proceso||'')}</td>
+        <td style="background:#FFF0F0">${esc(c2.niveles?.inicio||'')}</td>
+      </tr>`).join('');
+      return `<div class="section">
+        <div class="sec-title" style="color:var(--gris)">Rúbrica de evaluación</div>
+        <div style="overflow-x:auto"><table class="rubrica-portal">
+          <thead><tr>
+            <th style="background:var(--gris);text-align:left;padding:8px 10px">Criterio</th>
+            ${NHEAD.map(n=>`<th style="background:${n.bg}">${n.l}</th>`).join('')}
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    })()}
 
     ${c.nota_sustituto?`<div class="section">
       <div class="sec-title" style="color:var(--gris)">Nota para sustituto/a</div>
