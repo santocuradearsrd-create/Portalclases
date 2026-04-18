@@ -109,6 +109,48 @@ nav{background:var(--azul);color:#fff;padding:12px 20px;display:flex;align-items
 #toast.success{background:var(--verde)}
 #toast.error{background:var(--rojo)}
 @media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none}.form-row,.form-row3{grid-template-columns:1fr}}
+
+/* ── RÚBRICA ── */
+.rubrica-wrap{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.rubrica-head{display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr 30px;gap:6px;padding:8px 12px;background:var(--gris)}
+.rubrica-head span{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+.rubrica-criteria-row{display:grid;grid-template-columns:140px 1fr 1fr 1fr 1fr 30px;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:start}
+.rubrica-criteria-row:last-child{border-bottom:none}
+.rubrica-criteria-row:nth-child(even){background:#FAFBFD}
+.rb-ta{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:5px 7px;font-size:11px;resize:none;outline:none;font-family:inherit;line-height:1.5;min-height:50px;transition:.15s}
+.rb-ta:focus{border-color:var(--azul)}
+.rb-ex{background:#F0FDF4}.rb-lo{background:#EFF3FF}.rb-pr{background:#FFF8F0}.rb-in{background:#FFF0F0}
+.rubrica-empty{padding:20px;text-align:center;color:#AAA;font-size:13px;background:#FAFBFD}
+.btn-rubrica-add{width:100%;padding:9px;border:1.5px dashed #9BBFED;background:#F0F6FF;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;color:var(--azul);transition:.15s;margin-top:6px}
+.btn-rubrica-add:hover{background:var(--azul-cl);border-color:var(--azul)}
+.btn-rubrica-clear{width:100%;padding:8px;border:1.5px dashed #FFCDD2;background:#FFF5F5;border-radius:8px;font-size:11px;cursor:pointer;font-weight:600;color:var(--rojo);transition:.15s;margin-top:4px}
+.btn-rubrica-clear:hover{background:#FFEBEE}
+
+/* ── ICONOS DE MATERIA ── */
+.icono-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.icono-btn{width:44px;height:44px;border:2px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;padding:0}
+.icono-btn:hover{border-color:var(--azul);background:var(--azul-cl)}
+.icono-btn.sel{border-color:var(--azul);background:var(--azul-cl);box-shadow:0 0 0 2px var(--azul)}
+.icono-btn svg{width:24px;height:24px}
+
+/* ── IMÁGENES ── */
+.img-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.img-thumb{position:relative;width:96px;height:72px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border);background:#F0F4F8}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb-del{position:absolute;top:3px;right:3px;background:rgba(183,28,28,.85);border:none;color:#fff;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1}
+.img-upload-btn{width:96px;height:72px;border:2px dashed #9BBFED;border-radius:8px;background:#F0F6FF;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(--azul);font-weight:600;transition:.15s}
+.img-upload-btn:hover{background:var(--azul-cl);border-color:var(--azul)}
+.img-upload-btn svg{width:22px;height:22px;stroke:var(--azul);fill:none}
+.img-hint{font-size:10px;color:#AAA;margin-top:6px;line-height:1.4}
+
+/* ── ADMIN MEJORADO ── */
+.admin-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:22px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.admin-card h3{font-size:15px;font-weight:700;color:var(--azul);margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--azul-cl);display:flex;align-items:center;gap:8px}
+.prof-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;background:var(--bg);transition:.15s}
+.prof-row:hover{border-color:#9BBFED;background:var(--azul-cl)}
+.prof-avatar{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prof-avatar svg{width:26px;height:26px}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -289,7 +331,7 @@ function renderSbMaterias(){
   el.innerHTML=A.materias.map(m=>`
     <div class="materia-pill${m.id===A.materiaId?' active':''}" onclick="setMateria('${m.id}')">
       <div style="display:flex;align-items:center;gap:7px">
-        <span style="width:10px;height:10px;border-radius:50%;background:${m.color||'#1B3A6B'};flex-shrink:0;display:inline-block"></span>
+        <span style="width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:${m.color||'#1B3A6B'}">${getIconoSVG(m.icono)}</span>
         <span class="mp-name">${esc(m.nombre)}</span>
       </div>
       <div class="mp-sub">${m.icono||'📚'}</div>
@@ -358,7 +400,7 @@ function emptyForm(){
   return {titulo:'',subtitulo:'',fase:'',competencia:'',indicadores:[],peso:'',instrumento:'',color:'#1B3A6B',
     actividades:[{tipo:'I',titulo:'Inicio (~10 min)',pasos:['']},{tipo:'D',titulo:'Desarrollo (~25 min)',pasos:['']},{tipo:'C',titulo:'Cierre (~15 min)',pasos:['']}],
     texto_biblico:{cita:'',texto:'',contexto:''},actividades_cuaderno:[{instruccion:''}],
-    metacognicion:'',recursos:[],nota_sustituto:'',classroom_txt:''};
+    metacognicion:'',recursos:[],nota_sustituto:'',classroom_txt:'',imagenes:[],rubrica:null};
 }
 
 function normalizeForm(d){
@@ -371,6 +413,7 @@ function normalizeForm(d){
     actividades_cuaderno:parseJ(d.actividades_cuaderno,[{instruccion:''}]),
     metacognicion:d.metacognicion||'', recursos:parseJ(d.recursos,[]),
     nota_sustituto:d.nota_sustituto||'', classroom_txt:d.classroom_txt||'',
+    imagenes:parseJ(d.imagenes,[]), rubrica:parseJ(d.rubrica,null),
   };
 }
 
@@ -654,6 +697,8 @@ async function saveClase(){
     recursos:        Array.isArray(f.recursos)?f.recursos:[],
     nota_sustituto:  f.nota_sustituto||'',
     classroom_txt:   f.classroom_txt||'',
+    imagenes:        Array.isArray(f.imagenes)?f.imagenes:[],
+    rubrica:         f.rubrica||null,
   });
 
   console.log('Guardando clase — titulo:', f.titulo, '| semana:', E.semana);
@@ -709,8 +754,36 @@ async function reloadClases(){
 
 function backToGrid(){E={semana:null,claseId:null,tab:'manual',activa:false,form:null};showGrid();}
 
+// ── SVG ICONOS DE MATERIAS ───────────────────────────────────────
+const ICONOS = {
+  cruz:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>`,
+  libro:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+  atomo:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 4 0 010 20M12 2a10 4 0 000 20"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>`,
+  compas:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M8.5 10.5L4 21l8-3 8 3-4.5-10.5"/></svg>`,
+  paleta:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20c1.66 0 2-.79 2-2s-.34-2-2-2H10c-.55 0-1 .45-1 1 0 1.1.9 2 2 2a10 10 0 000-20z"/><circle cx="8" cy="14" r="1" fill="currentColor"/><circle cx="8" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/></svg>`,
+  nota:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  globo:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>`,
+  calc:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>`,
+  flasca:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M9 3v6L4 20h16L15 9V3"/></svg>`,
+  planta:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M12 12C12 7 7 4 3 6c4 0 7 2 9 6M12 12c0-5 5-8 9-6-4 0-7 2-9 6"/></svg>`,
+  gente:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+  bombilla: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8a6 6 0 00-6-6 6 6 0 00-6 6 4.65 4.65 0 001.5 3.5c.75.76 1.23 1.52 1.41 2.5"/></svg>`,
+  corazon:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`,
+  cpu:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>`,
+  estella:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+};
+
+function renderIconoGrid(selId, onclickFn){
+  return Object.entries(ICONOS).map(([id,svg])=>
+    `<button class="icono-btn${selId===id?' sel':''}" onclick="${onclickFn}('${id}')" title="${id}">${svg}</button>`
+  ).join('');
+}
+
+function getIconoSVG(id){ return ICONOS[id] || ICONOS.libro; }
+
 // ── ADMIN PANEL ──────────────────────────────────────────────────
 let _newColor=COLORES[0];
+let _newIcono='libro';
 
 async function showAdmin(){
   const panel=document.getElementById('main-panel');
@@ -740,6 +813,9 @@ async function showAdmin(){
           ${COLORES.map((c,i)=>`<div class="color-swatch${i===0?' sel':''}" style="background:${c}" onclick="setNewColor('${c}',this)"></div>`).join('')}
         </div>
       </div>
+      <div class="form-group"><label class="form-label">Icono de la materia</label>
+        <div class="icono-grid" id="n-iconos">${renderIconoGrid('libro','setNewIcono')}</div>
+      </div>
       <button onclick="crearDocente()" style="padding:10px 24px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✅ Crear docente</button>
       <div id="n-status" style="margin-top:8px;font-size:13px;min-height:20px"></div>
     </div>
@@ -749,7 +825,7 @@ async function showAdmin(){
       ${profs.length===0?'<div style="color:var(--sub);font-size:13px;padding:10px 0">No hay docentes registrados aún.</div>':
       profs.map(p=>`
         <div class="prof-row" id="pr-${p.id}">
-          <div class="prof-avatar" style="background:${p.color_1||'#1B3A6B'}20">${p.icono||'📚'}</div>
+          <div class="prof-avatar" style="background:${p.color_1||'#1B3A6B'}20;color:${p.color_1||'#1B3A6B'}">${getIconoSVG(p.icono)||p.icono||'📚'}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:13px">${esc(p.nombre)}</div>
             <div style="font-size:11px;color:var(--sub);margin-top:2px">${p.materias?p.materias.map(m=>m.nombre).join(' · '):'Sin materias'}</div>
@@ -770,6 +846,13 @@ function setNewColor(c,el){
   document.querySelectorAll('#n-colors .color-swatch').forEach(s=>s.classList.remove('sel'));
   el.classList.add('sel');
 }
+function setNewIcono(id){
+  _newIcono=id;
+  document.querySelectorAll('#n-iconos .icono-btn').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('#n-iconos .icono-btn').forEach(b=>{
+    if(b.getAttribute('onclick').includes("'"+id+"'")) b.classList.add('sel');
+  });
+}
 
 async function crearDocente(){
   const nombre=document.getElementById('n-nombre')?.value?.trim();
@@ -782,7 +865,7 @@ async function crearDocente(){
   if(st)st.textContent='⏳ Creando...';
 
   const hash=await sha256(pin);
-  const {data}=await sb.rpc('admin_crear_profesor',{p_admin_hash:S.pinHash,p_nombre:nombre,p_pin_hash:hash,p_color_1:_newColor,p_color_2:'#0D2B52',p_icono:'📚'});
+  const svgStr=getIconoSVG(_newIcono);const {data}=await sb.rpc('admin_crear_profesor',{p_admin_hash:S.pinHash,p_nombre:nombre,p_pin_hash:hash,p_color_1:_newColor,p_color_2:'#0D2B52',p_icono:_newIcono});
   if(!data?.ok){if(st)st.textContent='Error: '+(data?.error||'desconocido');return;}
 
   let matOk=0;
@@ -806,6 +889,141 @@ async function deleteProf(id,nombre){
   const {data}=await sb.rpc('admin_delete_profesor',{p_admin_hash:S.pinHash,p_profesor_id:id});
   if(data?.ok){ showToast(`Docente "${nombre}" eliminado`,'success'); showAdmin(); }
   else showToast('Error: '+(data?.error||'desconocido'),'error');
+}
+
+// ── RÚBRICA HELPERS ─────────────────────────────────────────────
+function getRubricaData(){
+  const rows=document.querySelectorAll('.rubrica-criteria-row[data-ri]');
+  if(!rows.length)return null;
+  const criterios=[];
+  rows.forEach(row=>{
+    const nombre=row.querySelector('[data-field="nombre"]')?.value?.trim()||'';
+    const excelente=row.querySelector('[data-field="excelente"]')?.value||'';
+    const logrado=row.querySelector('[data-field="logrado"]')?.value||'';
+    const proceso=row.querySelector('[data-field="proceso"]')?.value||'';
+    const inicio=row.querySelector('[data-field="inicio"]')?.value||'';
+    if(nombre)criterios.push({nombre,niveles:{excelente,logrado,proceso,inicio}});
+  });
+  return criterios.length?{criterios}:null;
+}
+
+function renderRubricaBlock(){
+  const r=E.form.rubrica;
+  const criterios=(r&&Array.isArray(r.criterios))?r.criterios:[];
+  const NHEAD=[
+    {k:'excelente',l:'Excelente (4)',cls:'rb-ex',c:'#1B5E20'},
+    {k:'logrado',  l:'Logrado (3)',  cls:'rb-lo',c:'#0D47A1'},
+    {k:'proceso',  l:'En Proceso (2)',cls:'rb-pr',c:'#E65100'},
+    {k:'inicio',   l:'Inicio (1)',   cls:'rb-in',c:'#B71C1C'},
+  ];
+  let h='<div class="rubrica-wrap">';
+  if(criterios.length){
+    h+=`<div class="rubrica-head"><span>Criterio</span>`;
+    NHEAD.forEach(n=>h+=`<span style="color:${n.c === '#1B5E20' ? '#A5D6A7' : n.c === '#0D47A1' ? '#90CAF9' : n.c === '#E65100' ? '#FFCC80' : '#EF9A9A'}">${n.l}</span>`);
+    h+=`<span></span></div>`;
+    criterios.forEach((c,ci)=>{
+      h+=`<div class="rubrica-criteria-row" data-ri="${ci}">
+        <div><input class="rb-ta" data-field="nombre" value="${esc(c.nombre||'')}" placeholder="Criterio..." oninput="syncRubrica()" style="font-weight:700;color:var(--azul);min-height:36px"></div>`;
+      NHEAD.forEach(n=>{
+        h+=`<div><textarea class="rb-ta ${n.cls}" data-field="${n.k}" rows="2" placeholder="${n.l}..." oninput="syncRubrica()">${esc(c.niveles?.[n.k]||'')}</textarea></div>`;
+      });
+      h+=`<div style="display:flex;align-items:flex-start;padding-top:6px"><button class="btn-remove" onclick="rmCriterio(${ci})">✕</button></div></div>`;
+    });
+  } else {
+    h+='<div class="rubrica-empty">Sin criterios — agrega el primero</div>';
+  }
+  h+='</div>';
+  h+=`<button class="btn-rubrica-add" onclick="addCriterio()">+ Agregar criterio de evaluación</button>`;
+  if(criterios.length){
+    h+=`<button class="btn-rubrica-clear" onclick="clearRubrica()">✕ Eliminar rúbrica completa</button>`;
+  }
+  return h;
+}
+
+function syncRubrica(){
+  E.form.rubrica=getRubricaData();
+}
+function addCriterio(){
+  if(!E.form.rubrica||!Array.isArray(E.form.rubrica.criterios))
+    E.form.rubrica={criterios:[]};
+  E.form.rubrica.criterios.push({nombre:'',niveles:{excelente:'',logrado:'',proceso:'',inicio:''}});
+  reRender();
+}
+function rmCriterio(ci){
+  if(!E.form.rubrica?.criterios)return;
+  // Sync current values before removing
+  syncRubrica();
+  E.form.rubrica.criterios.splice(ci,1);
+  if(!E.form.rubrica.criterios.length)E.form.rubrica=null;
+  reRender();
+}
+function clearRubrica(){ E.form.rubrica=null; reRender(); }
+
+// ── IMÁGENES HELPERS ─────────────────────────────────────────────
+const IMG_MAX=5, IMG_MAXKB=800;
+
+function renderImageBlock(){
+  const imgs=Array.isArray(E.form.imagenes)?E.form.imagenes:[];
+  let h='<div class="img-grid" id="img-grid">';
+  imgs.forEach((url,i)=>{
+    h+=`<div class="img-thumb">
+      <img src="${esc(url)}" alt="img ${i+1}">
+      <button class="img-thumb-del" onclick="delImagen(${i})" title="Eliminar">✕</button>
+    </div>`;
+  });
+  if(imgs.length<IMG_MAX){
+    h+=`<label class="img-upload-btn" title="Agregar imagen (JPG/PNG/WebP · máx 800KB)">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Añadir</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadImagen(this)">
+    </label>`;
+  }
+  h+='</div>';
+  h+=`<div class="img-hint">${imgs.length}/${IMG_MAX} imágenes · JPG, PNG, WebP · máx ${IMG_MAXKB}KB cada una · ideal para ejercicios, planos, diagramas</div>`;
+  if(document.getElementById('img-upload-status'))
+    h+=`<div id="img-upload-status" style="font-size:12px;color:var(--azul);margin-top:4px"></div>`;
+  else
+    h+=`<div id="img-upload-status" style="font-size:12px;color:var(--azul);margin-top:4px"></div>`;
+  return h;
+}
+
+async function uploadImagen(input){
+  const file=input.files[0]; if(!file)return;
+  const st=document.getElementById('img-upload-status');
+  const ok_types=['image/jpeg','image/png','image/webp'];
+  if(!ok_types.includes(file.type)){ if(st)st.textContent='⚠️ Solo JPG, PNG o WebP'; return; }
+  const kb=file.size/1024;
+  if(kb>IMG_MAXKB){ if(st)st.textContent=`⚠️ La imagen pesa ${Math.round(kb)}KB — máximo ${IMG_MAXKB}KB`; return; }
+  if(!Array.isArray(E.form.imagenes))E.form.imagenes=[];
+  if(E.form.imagenes.length>=IMG_MAX){ if(st)st.textContent=`⚠️ Máximo ${IMG_MAX} imágenes por clase`; return; }
+  if(st)st.textContent='⏳ Subiendo...';
+
+  const ext=file.name.split('.').pop().toLowerCase();
+  const path=`clase-${E.claseId||'tmp'}-${Date.now()}.${ext}`;
+  const {data,error}=await sb.storage.from('clase-imagenes').upload(path,file,{upsert:true,contentType:file.type});
+  if(error){ if(st)st.textContent='⚠️ Error al subir: '+error.message; return; }
+
+  const {data:{publicUrl}}=sb.storage.from('clase-imagenes').getPublicUrl(path);
+  E.form.imagenes.push(publicUrl);
+  if(st)st.textContent='✓ Imagen agregada';
+  // Re-render just the image block
+  const imgSection=document.getElementById('img-section');
+  if(imgSection)imgSection.innerHTML=renderImageBlock();
+  setTimeout(()=>{ if(st)st.textContent=''; },2500);
+  input.value='';
+}
+
+async function delImagen(idx){
+  if(!Array.isArray(E.form.imagenes))return;
+  const url=E.form.imagenes[idx];
+  // Extract path from URL for deletion
+  try{
+    const parts=url.split('/clase-imagenes/');
+    if(parts[1]) await sb.storage.from('clase-imagenes').remove([parts[1]]);
+  }catch(e){ console.warn('Storage delete failed:', e); }
+  E.form.imagenes.splice(idx,1);
+  const imgSection=document.getElementById('img-section');
+  if(imgSection)imgSection.innerHTML=renderImageBlock();
 }
 
 // ── UTILS ────────────────────────────────────────────────────────
