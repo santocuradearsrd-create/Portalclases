@@ -797,7 +797,7 @@ const ICONOS = {
 
 function renderIconoGrid(selId, onclickFn){
   return Object.entries(ICONOS).map(([id,svg])=>
-    `<button class="icono-btn${selId===id?' sel':''}" onclick="${onclickFn}('${id}')" title="${id}">${svg}</button>`
+    `<button class="icono-btn${selId===id?' sel':''}" data-id="${id}" onclick="${onclickFn}('${id}')" title="${id}">${svg}</button>`
   ).join('');
 }
 
@@ -870,9 +870,8 @@ function setNewColor(c,el){
 }
 function setNewIcono(id){
   _newIcono=id;
-  document.querySelectorAll('#n-iconos .icono-btn').forEach(b=>b.classList.remove('sel'));
   document.querySelectorAll('#n-iconos .icono-btn').forEach(b=>{
-    if(b.getAttribute('onclick').includes("'"+id+"'")) b.classList.add('sel');
+    b.classList.toggle('sel', b.dataset.id === id);
   });
 }
 
@@ -892,7 +891,7 @@ async function crearDocente(){
 
   let matOk=0;
   for(const m of mats){
-    const {data:md}=await sb.rpc('admin_crear_materia',{p_admin_hash:S.pinHash,p_profesor_id:data.id,p_nombre:m,p_color:_newColor,p_icono:'📚'});
+    const {data:md}=await sb.rpc('admin_crear_materia',{p_admin_hash:S.pinHash,p_profesor_id:data.id,p_nombre:m,p_color:_newColor,p_icono:_newIcono});
     if(md?.ok)matOk++;
   }
 
