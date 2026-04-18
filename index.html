@@ -146,23 +146,29 @@ document.addEventListener('copy',function(e){
   if(s&&s.toString().length>0){e.clipboardData.setData('text/plain','');e.preventDefault();showCopyToast();}
 });
 document.addEventListener('contextmenu',function(e){
-  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.closest('.copy-btn'))return;
+  var t=e.target;
+  if(!t||typeof t.closest!=='function')return;
+  if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.closest('.copy-btn'))return;
   e.preventDefault();showCopyToast();
 });
 document.addEventListener('selectstart',function(e){
-  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.closest('.copy-btn'))return;
+  var t=e.target;
+  if(!t||typeof t.closest!=='function')return;
+  if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.closest('.copy-btn'))return;
   e.preventDefault();
 });
 function showCopyToast(){var el=document.getElementById('copy-toast');el.style.display='block';clearTimeout(window._ct);window._ct=setTimeout(function(){el.style.display='none';},2800);}
+// Acceso docente oculto: 5 clics en logo en menos de 2 seg
+var _lc=0,_lt=null;
+function logoClick(){_lc++;clearTimeout(_lt);_lt=setTimeout(function(){_lc=0;},2000);if(_lc>=5){_lc=0;window.location.href='docente.html';}}
 </script>
 
 <nav>
   <div class="nav-inner">
-    <div class="logo">
+    <div class="logo" onclick="logoClick()" style="cursor:default;-webkit-user-select:none;user-select:none">
       📚 Portal de Clases
       <span>CESCAR (Santo Cura de Ars)</span>
     </div>
-    <a href="docente.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none">🔑 Docentes</a>
   </div>
   <div class="grade-bar" id="grade-bar"></div>
 </nav>
@@ -364,9 +370,9 @@ function renderClaseCard(c){
   return `<div class="week-card">
     <div class="week-header" style="background:linear-gradient(135deg,${color},${color}CC)">
       <div class="materia-badge">${esc(c.materia_icono||'📚')} ${esc(c.materia_nombre||'')}</div>
-      <div class="fase-badge">Semana ${c.semana} · ${esc(c.fase||'')}</div>
+      <div class="fase-badge">Semana ${c.semana}${c.fase?' · '+esc(c.fase):''}</div>
       <h2>${esc(c.titulo)}</h2>
-      <div class="week-meta">${esc(c.subtitulo||'')} · ${c.grado} · P${c.periodo}</div>
+      <div class="week-meta">${c.subtitulo?esc(c.subtitulo)+' · ':''} ${c.grado} · P${c.periodo}</div>
       <div class="week-num">${c.semana}</div>
     </div>
 
@@ -386,20 +392,20 @@ function renderClaseCard(c){
       </div>
     </div>`:''}
 
-    ${actvs.length?`<div class="section">
+    ${actvs.some(a=>(a.pasos||[]).some(p=>p.trim()))?`<div class="section">
       <div class="sec-title" style="color:${color}">Secuencia de la clase</div>
       ${actvs.map(a=>`<div class="moment ${a.tipo}-m">
         <div class="m-badge">${esc(a.tipo)}</div>
         <div class="m-body">
           <h4>${esc(a.titulo)}</h4>
-          <ul class="content-text">${(a.pasos||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+          <ul class="content-text">${(a.pasos||[]).filter(p=>p.trim()).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
         </div>
       </div>`).join('')}
     </div>`:''}
 
-    ${cuad.length?`<div class="section">
+    ${cuad.filter(a=>a.instruccion&&a.instruccion.trim()).length?`<div class="section">
       <div class="sec-title" style="color:${color}">Actividades en el cuaderno</div>
-      ${cuad.map((a,i)=>`<div class="cuaderno-step">
+      ${cuad.filter(a=>a.instruccion&&a.instruccion.trim()).map((a,i)=>`<div class="cuaderno-step">
         <p class="content-text"><strong>${i+1}.</strong> ${esc(a.instruccion)}</p>
       </div>`).join('')}
     </div>`:''}
