@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Portal Docente · CESCAR</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --azul:#1B3A6B;--azul-cl:#DCE8F5;--verde:#1B5E20;--verde-cl:#E8F5E9;
+  --morado:#4A148C;--dorado:#7B5800;--gris:#37474F;--rojo:#B71C1C;
+  --bg:#F0F4F8;--card:#fff;--txt:#1A1A1A;--sub:#555;--border:#E0E0E0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* NAV */
+nav{background:var(--azul);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.logo{font-size:16px;font-weight:700;flex:1}
+.logo span{font-size:11px;opacity:.7;display:block;font-weight:400}
+.prof-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.btn-ghost{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-ghost:hover{background:rgba(255,255,255,.28)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:260px 1fr;gap:0;min-height:calc(100vh - 56px)}
+.sidebar{background:#fff;border-right:1px solid var(--border);padding:16px;overflow-y:auto}
+.main-panel{padding:20px;overflow-y:auto}
+
+/* PIN SCREEN */
+#pin-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);background:var(--bg)}
+.pin-card{background:#fff;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,.12);text-align:center}
+.pin-card .icon{font-size:44px;margin-bottom:12px}
+.pin-card h2{font-size:20px;font-weight:700;margin-bottom:6px;color:var(--azul)}
+.pin-card p{font-size:13px;color:var(--sub);margin-bottom:24px;line-height:1.5}
+.pin-input{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.pin-digit{width:42px;height:52px;border:2px solid var(--border);border-radius:10px;font-size:22px;text-align:center;font-weight:700;outline:none;transition:.2s}
+.pin-digit:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(27,58,107,.15)}
+.pin-error{color:var(--rojo);font-size:13px;min-height:20px;margin-bottom:8px}
+.btn-primary{background:var(--azul);color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700;width:100%;transition:.2s}
+.btn-primary:hover{background:#122d55}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+/* SIDEBAR */
+.sidebar-title{font-size:10px;font-weight:700;color:#AAB4C4;letter-spacing:1.5px;margin-bottom:10px;margin-top:16px}
+.sidebar-title:first-child{margin-top:0}
+.materia-pill{padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:1.5px solid transparent;transition:.15s}
+.materia-pill:hover{background:var(--azul-cl)}
+.materia-pill.active{background:var(--azul-cl);border-color:#9BBFED}
+.materia-pill .mp-name{font-size:13px;font-weight:700;color:var(--azul)}
+.materia-pill .mp-sub{font-size:11px;color:var(--sub);margin-top:2px}
+.sidebar-btn{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt);text-align:left;margin-bottom:6px;transition:.15s}
+.sidebar-btn:hover{background:var(--azul-cl);border-color:#9BBFED;color:var(--azul)}
+
+/* WEEK GRID */
+.week-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px}
+.week-tile{background:#fff;border-radius:10px;padding:14px;border:1.5px solid var(--border);cursor:pointer;transition:.15s;position:relative}
+.week-tile:hover{border-color:#9BBFED;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.week-tile.has-content{border-left:4px solid var(--azul)}
+.week-tile.active{background:#E8F5E9;border-color:#81C784}
+.wt-num{font-size:11px;font-weight:700;color:#AAA;margin-bottom:4px}
+.wt-title{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.wt-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.wt-active{background:#E8F5E9;color:var(--verde)}
+.wt-inactive{background:#F5F5F5;color:#999}
+.wt-empty{background:#F0F4F8;color:#AAA}
+
+/* EDITOR */
+.editor-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.editor-back{padding:7px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--txt)}
+.editor-back:hover{background:var(--azul-cl)}
+.editor-tabs{display:flex;gap:2px;background:#F0F4F8;padding:4px;border-radius:10px;margin-bottom:20px}
+.editor-tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;border:none;background:none;color:var(--sub)}
+.editor-tab.active{background:#fff;color:var(--azul);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:700;color:#7A8FA8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;color:var(--txt);background:#fff;transition:.15s;font-family:inherit}
+.form-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(27,58,107,.1)}
+.form-textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;resize:vertical;min-height:80px;font-family:inherit;line-height:1.6;color:var(--txt);background:#fff;transition:.15s}
+.form-textarea:focus{border-color:var(--azul)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* MOMENT EDITOR */
+.moment-block{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.moment-header{padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}
+.moment-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.step-row{display:flex;gap:6px;align-items:flex-start}
+.step-num{font-size:11px;color:#AAA;padding-top:10px;min-width:18px}
+.btn-small{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:11px;cursor:pointer;font-weight:600;color:var(--sub);transition:.15s}
+.btn-small:hover{background:var(--azul-cl);color:var(--azul);border-color:#9BBFED}
+.btn-remove{padding:4px 8px;border-radius:6px;border:none;background:none;font-size:13px;cursor:pointer;color:#CCC;flex-shrink:0;margin-top:6px}
+.btn-remove:hover{color:var(--rojo)}
+
+/* SAVE BAR */
+.save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 20px;display:flex;gap:10px;align-items:center;z-index:10}
+.btn-save{padding:10px 28px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.btn-save:hover{background:#122d55}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.btn-toggle-on{padding:10px 20px;background:#E8F5E9;color:var(--verde);border:1.5px solid #81C784;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-toggle-off{padding:10px 20px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFCC80;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* JSON AREA */
+.json-box{background:#1E1E1E;color:#D4D4D4;border-radius:10px;padding:16px;font-family:monospace;font-size:12px;line-height:1.6;min-height:300px;resize:vertical;width:100%;border:none;outline:none}
+.prompt-box{background:#F0F6FF;border:1.5px solid #9BBFED;border-radius:10px;padding:16px;font-family:monospace;font-size:11px;line-height:1.65;white-space:pre-wrap;color:var(--txt);max-height:400px;overflow-y:auto}
+
+/* ADMIN PANEL */
+.admin-section{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.admin-section h3{font-size:15px;font-weight:700;color:var(--azul);margin-bottom:14px}
+.prof-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;background:var(--bg)}
+.prof-card .pc-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.prof-card .pc-info{flex:1}
+.prof-card .pc-name{font-weight:700;font-size:13px}
+.prof-card .pc-sub{font-size:11px;color:var(--sub)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* SPINNER */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--azul);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-spinner{display:flex;align-items:center;justify-content:center;padding:60px;gap:10px;color:var(--sub)}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--gris);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;max-width:320px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{background:var(--verde)}
+#toast.error{background:var(--rojo)}
+
+.color-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s}
+.color-swatch.sel{border-color:var(--txt);transform:scale(1.1)}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .form-row,.form-row3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⚙️ Portal Docente · CESCAR<span>Panel de gestión de clases</span></div>
+  <div id="nav-prof" style="display:none" class="prof-badge">
+    <span id="nav-prof-icon">📚</span>
+    <span id="nav-prof-name">Cargando...</span>
+  </div>
+  <button class="btn-ghost" id="btn-logout" style="display:none" onclick="logout()">Salir</button>
+  <a href="index.html" class="btn-ghost">🌐 Ver portal</a>
+</nav>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-card">
+    <div class="icon">🔐</div>
+    <h2>Acceso Docente</h2>
+    <p>Ingresa tu PIN de 6 dígitos para acceder a tu panel de clases</p>
+    <div class="pin-input" id="pin-input">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d0" oninput="pinNext(this,1)" onkeydown="pinBack(this,event,-1)">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d1" oninput="pinNext(this,2)" onkeydown="pinBack(this,event,0)">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d2" oninput="pinNext(this,3)" onkeydown="pinBack(this,event,1)">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d3" oninput="pinNext(this,4)" onkeydown="pinBack(this,event,2)">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d4" oninput="pinNext(this,5)" onkeydown="pinBack(this,event,3)">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="d5" oninput="pinNext(this,-1)" onkeydown="pinBack(this,event,4)">
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <button class="btn-primary" id="pin-btn" onclick="doLogin()" disabled>Entrar</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="layout" id="app-layout" style="display:none">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-title">MIS MATERIAS</div>
+    <div id="sidebar-materias">
+      <div class="spinner"></div>
+    </div>
+    <div class="sidebar-title" style="margin-top:20px">GRADO</div>
+    <div id="sidebar-grados"></div>
+    <div class="sidebar-title" style="margin-top:20px">PERÍODO</div>
+    <div id="sidebar-periodos"></div>
+    <div id="sidebar-admin-section" style="display:none;margin-top:24px">
+      <div class="sidebar-title">ADMIN</div>
+      <button class="sidebar-btn" onclick="showAdminPanel()">👥 Gestionar profesores</button>
+    </div>
+  </div>
+
+  <div class="main-panel" id="main-panel">
+    <div class="page-spinner"><div class="spinner"></div>Cargando panel...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL  = 'https://famdtakcyifspscmphiy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhbWR0YWtjeWlmc3BzY21waGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTMzNDMsImV4cCI6MjA5MDg4OTM0M30.4bQVm39uwPP9W5BZrfyvmeaCdSy-Dx0yqDn2Ws8w0Fo';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const GRADOS   = ['1ro','2do','3ro','4to','5to','6to'];
+const PERIODOS = [1,2,3,4];
+const FASES    = ['SENTIR','PENSAR','ACTUAR','CELEBRAR'];
+const COLORES  = ['#1B3A6B','#1B5E20','#4A148C','#C84B00','#006064','#B71C1C','#37474F','#FF8F00'];
+
+let session = { prof: null, pinHash: null, isAdmin: false, adminHash: null };
+let appState = { materiaId: null, grado: '1ro', periodo: 1, clases: [], materias: [] };
+let editorState = { clase: null, tab: 'manual', form: null, editingId: null };
+
+// ── PIN LOGIN ──────────────────────────────────────────────────────
+function pinNext(el, next){
+  el.value = el.value.replace(/\D/g,'');
+  const all = ['d0','d1','d2','d3','d4','d5'].every(id => document.getElementById(id).value.length===1);
+  document.getElementById('pin-btn').disabled = !all;
+  if(el.value && next >= 0) document.getElementById('d'+next).focus();
+}
+function pinBack(el,e,prev){
+  if(e.key==='Backspace'&&!el.value&&prev>=0) document.getElementById('d'+prev).focus();
+}
+
+async function sha256(msg){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin(){
+  const pin = ['d0','d1','d2','d3','d4','d5'].map(id=>document.getElementById(id).value).join('');
+  if(pin.length < 6) return;
+  document.getElementById('pin-btn').disabled = true;
+  document.getElementById('pin-btn').textContent = 'Verificando...';
+
+  const hash = await sha256(pin);
+
+  // Intentar como profesor
+  const { data: profData } = await sb.rpc('auth_profesor', { p_pin_hash: hash });
+  if(profData?.ok){
+    session = { prof: profData, pinHash: hash, isAdmin: false };
+    sessionStorage.setItem('doc_session', JSON.stringify(session));
+    startApp();
+    return;
+  }
+
+  // Intentar como admin
+  const { data: adminData } = await sb.rpc('auth_admin', { p_pin_hash: hash });
+  if(adminData?.ok){
+    session = { prof: { nombre:'Administrador', id: null, icono:'⚙️', color_1:'#1B3A6B' }, pinHash: hash, isAdmin: true, adminHash: hash };
+    sessionStorage.setItem('doc_session', JSON.stringify(session));
+    startApp();
+    return;
+  }
+
+  document.getElementById('pin-error').textContent = 'PIN incorrecto. Intenta de nuevo.';
+  document.getElementById('pin-btn').disabled = false;
+  document.getElementById('pin-btn').textContent = 'Entrar';
+  ['d0','d1','d2','d3','d4','d5'].forEach(id => { document.getElementById(id).value=''; });
+  document.getElementById('d0').focus();
+}
+
+function logout(){
+  sessionStorage.removeItem('doc_session');
+  session = { prof: null, pinHash: null, isAdmin: false };
+  document.getElementById('pin-screen').style.display = 'flex';
+  document.getElementById('app-layout').style.display = 'none';
+  document.getElementById('nav-prof').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  ['d0','d1','d2','d3','d4','d5'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('pin-btn').disabled = true;
+  document.getElementById('pin-btn').textContent = 'Entrar';
+  document.getElementById('pin-error').textContent = '';
+}
+
+// Check saved session
+const savedSession = sessionStorage.getItem('doc_session');
+if(savedSession){
+  try{
+    const s = JSON.parse(savedSession);
+    session = s;
+    startApp();
+  } catch(e){ sessionStorage.removeItem('doc_session'); }
+}
+
+// ── START APP ──────────────────────────────────────────────────────
+function startApp(){
+  document.getElementById('pin-screen').style.display = 'none';
+  document.getElementById('app-layout').style.display = 'grid';
+  document.getElementById('btn-logout').style.display = 'block';
+  document.getElementById('nav-prof').style.display = 'flex';
+  document.getElementById('nav-prof-icon').textContent = session.prof?.icono || '📚';
+  document.getElementById('nav-prof-name').textContent = session.prof?.nombre || 'Docente';
+
+  if(session.isAdmin){
+    document.getElementById('sidebar-admin-section').style.display = 'block';
+    showAdminPanel();
+  } else {
+    loadMaterias();
+  }
+  renderSidebarGrados();
+  renderSidebarPeriodos();
+}
+
+function renderSidebarGrados(){
+  document.getElementById('sidebar-grados').innerHTML = GRADOS.map(g =>
+    `<button class="sidebar-btn${appState.grado===g?' active':''}" style="${appState.grado===g?'background:var(--azul-cl);border-color:#9BBFED;color:var(--azul)':''}" onclick="selectGrado('${g}')">${g}</button>`
+  ).join('');
+}
+function renderSidebarPeriodos(){
+  document.getElementById('sidebar-periodos').innerHTML = PERIODOS.map(p =>
+    `<button class="sidebar-btn${appState.periodo===p?' active':''}" style="${appState.periodo===p?'background:var(--azul-cl);border-color:#9BBFED;color:var(--azul)':''}" onclick="selectPeriodo(${p})">Período ${p}</button>`
+  ).join('');
+}
+
+function selectGrado(g){ appState.grado=g; renderSidebarGrados(); showWeekGrid(); }
+function selectPeriodo(p){ appState.periodo=p; renderSidebarPeriodos(); showWeekGrid(); }
+
+async function loadMaterias(){
+  const { data } = await sb.rpc('get_clases_profesor', { p_profesor_id: session.prof.id, p_pin_hash: session.pinHash });
+  if(!data?.ok){ showToast('Error cargando datos','error'); return; }
+
+  // Agrupar por materia
+  const clases = data.data || [];
+  const materiasMap = {};
+  clases.forEach(c => {
+    if(!materiasMap[c.materia_id]){
+      materiasMap[c.materia_id] = { id:c.materia_id, nombre:c.materia_nombre, color:c.materia_color };
+    }
+  });
+  appState.materias = Object.values(materiasMap);
+  appState.clases = clases;
+
+  // Cargar materias propias del profesor
+  const { data: mats } = await sb.from('portal_materias').select('*').eq('profesor_id', session.prof.id);
+  if(mats) appState.materias = mats;
+
+  if(!appState.materiaId && appState.materias.length > 0) appState.materiaId = appState.materias[0].id;
+  renderSidebarMaterias();
+  showWeekGrid();
+}
+
+function renderSidebarMaterias(){
+  const el = document.getElementById('sidebar-materias');
+  if(!appState.materias.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:8px">Sin materias asignadas</div>';
+    return;
+  }
+  el.innerHTML = appState.materias.map(m => `
+    <div class="materia-pill${m.id===appState.materiaId?' active':''}" onclick="selectMateria('${m.id}')">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${m.color||'#1B3A6B'};flex-shrink:0"></span>
+        <div class="mp-name">${esc(m.nombre)}</div>
+      </div>
+      <div class="mp-sub">${m.icono||'📚'}</div>
+    </div>
+  `).join('');
+}
+
+function selectMateria(id){ appState.materiaId=id; renderSidebarMaterias(); showWeekGrid(); }
+
+// ── WEEK GRID ──────────────────────────────────────────────────────
+function showWeekGrid(){
+  const panel = document.getElementById('main-panel');
+  if(!appState.materiaId){ panel.innerHTML = '<div class="page-spinner" style="color:var(--sub)">Selecciona una materia</div>'; return; }
+
+  const clases = appState.clases.filter(c =>
+    c.materia_id === appState.materiaId &&
+    c.grado === appState.grado &&
+    c.periodo === appState.periodo
+  );
+
+  const claseMap = {};
+  clases.forEach(c => claseMap[c.semana] = c);
+
+  const mat = appState.materias.find(m=>m.id===appState.materiaId);
+  const color = mat?.color || '#1B3A6B';
+
+  let html = `<div style="margin-bottom:20px">
+    <div style="font-size:11px;color:#AAA;font-weight:700;letter-spacing:1px;margin-bottom:8px">CLASES — ${appState.grado} · Período ${appState.periodo} · ${esc(mat?.nombre||'')}</div>
+    <div class="week-grid">`;
+
+  for(let s=1; s<=12; s++){
+    const c = claseMap[s];
+    if(c){
+      html += `<div class="week-tile has-content${c.activa?' active':''}" style="border-left-color:${color}" onclick="openEditor(${s})">
+        <div class="wt-num">Semana ${s}</div>
+        <div class="wt-title">${esc(c.titulo||'Sin título')}</div>
+        <div class="wt-badges">
+          <span class="wt-badge ${c.activa?'wt-active':'wt-inactive'}">${c.activa?'✅ Activa':'⬜ Inactiva'}</span>
+          ${c.fase?`<span class="wt-badge" style="background:#EEF2F7;color:#555">${esc(c.fase)}</span>`:''}
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="week-tile wt-empty" onclick="openEditor(${s})">
+        <div class="wt-num">Semana ${s}</div>
+        <div class="wt-title" style="color:#AAA">Sin contenido</div>
+        <div class="wt-badges"><span class="wt-badge wt-empty">+ Agregar</span></div>
+      </div>`;
+    }
+  }
+
+  html += `</div></div>`;
+  panel.innerHTML = html;
+}
+
+// ── EDITOR ─────────────────────────────────────────────────────────
+async function openEditor(semana){
+  const mat = appState.materias.find(m=>m.id===appState.materiaId);
+  const color = mat?.color || '#1B3A6B';
+
+  // Buscar clase existente
+  const existing = appState.clases.find(c =>
+    c.materia_id===appState.materiaId && c.grado===appState.grado && c.periodo===appState.periodo && c.semana===semana
+  );
+
+  let claseData = null;
+  if(existing){
+    const { data } = await sb.rpc('get_clase_detalle', { p_profesor_id:session.prof.id, p_pin_hash:session.pinHash, p_clase_id:existing.id });
+    claseData = data?.ok ? data.data : null;
+  }
+
+  editorState.editingId = claseData?.id || null;
+  editorState.tab = 'manual';
+  editorState.form = claseData ? JSON.parse(JSON.stringify(claseData)) : getEmptyForm();
+
+  renderEditor(semana, mat, claseData);
+}
+
+function getEmptyForm(){
+  return {
+    titulo:'', subtitulo:'', fase:'', competencia:'', indicadores:[], peso:'', instrumento:'', color:'#1B3A6B',
+    actividades:[
+      {tipo:'I',titulo:'Inicio (~10 min)',pasos:['']},
+      {tipo:'D',titulo:'Desarrollo (~25 min)',pasos:['']},
+      {tipo:'C',titulo:'Cierre (~15 min)',pasos:['']},
+    ],
+    texto_biblico:{cita:'',texto:'',contexto:''},
+    actividades_cuaderno:[{instruccion:''}],
+    metacognicion:'', recursos:[], nota_sustituto:'', classroom_txt:'',
+    activa: false,
+  };
+}
+
+function renderEditor(semana, mat, claseData){
+  const panel = document.getElementById('main-panel');
+  const f = editorState.form;
+  const color = mat?.color||'#1B3A6B';
+
+  panel.innerHTML = `
+    <div class="editor-header">
+      <button class="editor-back" onclick="backToGrid()">← Volver</button>
+      <div>
+        <div style="font-size:11px;color:#AAA;font-weight:700;letter-spacing:.8px">${esc(mat?.nombre||'')} · ${appState.grado} · Período ${appState.periodo}</div>
+        <div style="font-size:16px;font-weight:700;color:var(--azul)">Semana ${semana}</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="font-size:12px;color:${f.activa?'var(--verde)':'#AAA'};font-weight:700">${f.activa?'✅ Publicada':'⬜ No publicada'}</div>
+    </div>
+
+    <div class="editor-tabs">
+      <button class="editor-tab${editorState.tab==='manual'?' active':''}" onclick="setEditorTab('manual')">✏️ Editor manual</button>
+      <button class="editor-tab${editorState.tab==='json'?' active':''}" onclick="setEditorTab('json')">📥 Importar JSON</button>
+      <button class="editor-tab${editorState.tab==='prompt'?' active':''}" onclick="setEditorTab('prompt')">✨ Prompt para IA</button>
+    </div>
+
+    <div id="editor-content"></div>
+
+    <div class="save-bar">
+      <button class="btn-save" onclick="saveClase(${semana})" id="btn-save-main">💾 Guardar</button>
+      <button class="${f.activa?'btn-toggle-on':'btn-toggle-off'}" onclick="toggleActiva(${semana})" id="btn-toggle">
+        ${f.activa?'⬜ Desactivar':'✅ Publicar'}
+      </button>
+      <span id="save-status" style="font-size:12px;color:#AAA"></span>
+    </div>
+  `;
+
+  renderEditorContent(semana, mat);
+}
+
+function setEditorTab(tab){ editorState.tab = tab; const panel = document.getElementById('editor-content'); if(!panel) return; renderEditorContent(null, appState.materias.find(m=>m.id===appState.materiaId)); }
+
+function renderEditorContent(semana, mat){
+  const el = document.getElementById('editor-content');
+  if(!el) return;
+  const f = editorState.form;
+  const color = mat?.color||'#1B3A6B';
+
+  if(editorState.tab === 'manual'){
+    el.innerHTML = renderManualForm(f, color);
+  } else if(editorState.tab === 'json'){
+    el.innerHTML = renderJSONTab();
+  } else {
+    el.innerHTML = renderPromptTab(mat);
+  }
+}
+
+function renderManualForm(f, color){
+  const indsStr = Array.isArray(f.indicadores) ? f.indicadores.join(', ') : '';
+  const recursosStr = Array.isArray(f.recursos) ? f.recursos.join(', ') : '';
+  const bib = f.texto_biblico || {cita:'',texto:'',contexto:''};
+  const actvs = Array.isArray(f.actividades) ? f.actividades : [];
+  const cuad = Array.isArray(f.actividades_cuaderno) ? f.actividades_cuaderno : [];
+
+  const colorSwatches = COLORES.map(c =>
+    `<div class="color-swatch${f.color===c?' sel':''}" style="background:${c}" onclick="setFormColor('${c}')"></div>`
+  ).join('');
+
+  const momentHtml = actvs.map((a,ai) => {
+    const bg = a.tipo==='I'?'#EEF2FF':a.tipo==='D'?'#E8F5E9':'#FFF3E0';
+    const bc = a.tipo==='I'?'#3949AB':a.tipo==='D'?'#2E7D32':'#E65100';
+    return `<div class="moment-block">
+      <div class="moment-header" style="background:${bg};color:${bc}">
+        <div style="width:28px;height:28px;border-radius:50%;background:${bc};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${esc(a.tipo)}</div>
+        <input value="${esc(a.titulo)}" oninput="setMomentoTitulo(${ai},this.value)" style="flex:1;border:none;background:transparent;font-size:13px;font-weight:700;outline:none;color:${bc}">
+      </div>
+      <div class="moment-body">
+        ${(a.pasos||[]).map((p,pi) => `
+          <div class="step-row">
+            <span class="step-num">${pi+1}.</span>
+            <textarea class="form-textarea" rows="2" style="min-height:50px" oninput="setPaso(${ai},${pi},this.value)">${esc(p)}</textarea>
+            <button class="btn-remove" onclick="removePaso(${ai},${pi})">✕</button>
+          </div>`).join('')}
+        <button class="btn-small" onclick="addPaso(${ai})">+ Paso</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div style="max-width:720px">
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--azul);margin-bottom:14px;letter-spacing:.5px">📋 INFORMACIÓN BÁSICA</div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Título *</label><input class="form-input" value="${esc(f.titulo)}" oninput="setF('titulo',this.value)" placeholder="Título de la clase"></div>
+        <div class="form-group"><label class="form-label">Subtítulo</label><input class="form-input" value="${esc(f.subtitulo||'')}" oninput="setF('subtitulo',this.value)" placeholder="Subtítulo o textos centrales"></div>
+      </div>
+      <div class="form-row3" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Fase pedagógica</label>
+          <select class="form-input" onchange="setF('fase',this.value)">
+            <option value="">— Sin fase —</option>
+            ${FASES.map(f2=>`<option value="${f2}"${f.fase===f2?' selected':''}>${f2}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Peso</label><input class="form-input" value="${esc(f.peso||'')}" oninput="setF('peso',this.value)" placeholder="ej: 10%"></div>
+        <div class="form-group"><label class="form-label">Instrumento</label><input class="form-input" value="${esc(f.instrumento||'')}" oninput="setF('instrumento',this.value)" placeholder="Rúbrica, lista..."></div>
+      </div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Competencia</label><input class="form-input" value="${esc(f.competencia||'')}" oninput="setF('competencia',this.value)" placeholder="Competencia principal"></div>
+        <div class="form-group"><label class="form-label">Indicadores (separados por coma)</label><input class="form-input" value="${esc(indsStr)}" oninput="setF('indicadores',this.value.split(',').map(s=>s.trim()).filter(Boolean))" placeholder="#1, #2"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color de la clase</label>
+        <div class="color-swatches">${colorSwatches}</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#4A148C;margin-bottom:14px">📖 TEXTO BÍBLICO</div>
+      <div class="form-group"><label class="form-label">Cita</label><input class="form-input" value="${esc(bib.cita||'')}" oninput="setBib('cita',this.value)" placeholder="Juan 13:14-15"></div>
+      <div class="form-group"><label class="form-label">Texto</label><textarea class="form-textarea" rows="3" oninput="setBib('texto',this.value)">${esc(bib.texto||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">Contexto / Reflexión</label><textarea class="form-textarea" rows="2" oninput="setBib('contexto',this.value)">${esc(bib.contexto||'')}</textarea></div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:14px">⏱ SECUENCIA DE CLASE</div>
+      ${momentHtml}
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--azul);margin-bottom:14px">📓 ACTIVIDADES DEL CUADERNO</div>
+      ${cuad.map((c,i) => `<div style="display:flex;gap:8px;margin-bottom:8px">
+        <span style="font-size:11px;color:#AAA;padding-top:10px;min-width:18px">${i+1}.</span>
+        <textarea class="form-textarea" rows="2" oninput="setCuad(${i},this.value)">${esc(c.instruccion||'')}</textarea>
+        <button class="btn-remove" onclick="removeCuad(${i})">✕</button>
+      </div>`).join('')}
+      <button class="btn-small" onclick="addCuad()">+ Actividad</button>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--dorado);margin-bottom:14px">💭 REFLEXIÓN / METACOGNICIÓN</div>
+      <textarea class="form-textarea" rows="2" oninput="setF('metacognicion',this.value)">${esc(f.metacognicion||'')}</textarea>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--verde);margin-bottom:14px">🔧 RECURSOS</div>
+      <input class="form-input" value="${esc(recursosStr)}" oninput="setF('recursos',this.value.split(',').map(s=>s.trim()).filter(Boolean))" placeholder="Biblia, Libro Abierto, Pizarrón... (separar con coma)">
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--verde);margin-bottom:14px">📋 TAREA GOOGLE CLASSROOM</div>
+      <textarea class="form-textarea" rows="4" oninput="setF('classroom_txt',this.value)">${esc(f.classroom_txt||'')}</textarea>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:80px">
+      <div style="font-size:12px;font-weight:700;color:var(--gris);margin-bottom:14px">📝 NOTA PARA SUSTITUTO/A</div>
+      <textarea class="form-textarea" rows="3" oninput="setF('nota_sustituto',this.value)">${esc(f.nota_sustituto||'')}</textarea>
+    </div>
+  </div>`;
+}
+
+function renderJSONTab(){
+  return `<div style="max-width:720px;margin-bottom:80px">
+    <div style="background:var(--azul-cl);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--azul)">
+      <strong>¿Cómo usar?</strong><br>
+      1. Ve a la pestaña "✨ Prompt para IA" y copia el prompt<br>
+      2. Pégalo en <a href="https://claude.ai" target="_blank" style="color:var(--azul);font-weight:700">Claude.ai</a> junto con tu material<br>
+      3. Copia el JSON que devuelve y pégalo aquí abajo<br>
+      4. Haz clic en "✅ Cargar JSON"
+    </div>
+    <div class="form-group">
+      <label class="form-label">Pega el JSON aquí</label>
+      <textarea class="json-box" id="json-input" rows="20" placeholder='{\n  "titulo": "...",\n  "actividades": [...],\n  ...\n}'></textarea>
+    </div>
+    <button onclick="loadJSON()" style="padding:10px 24px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✅ Cargar JSON → Editor manual</button>
+    <div id="json-error" style="color:var(--rojo);font-size:12px;margin-top:8px"></div>
+  </div>`;
+}
+
+function renderPromptTab(mat){
+  const prompt = buildPrompt(mat);
+  return `<div style="max-width:720px;margin-bottom:80px">
+    <div style="background:linear-gradient(135deg,#E8F0FE,#F0F6FF);border:1.5px solid #9BBFED;border-radius:12px;padding:20px;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--azul);margin-bottom:8px">✨ Instrucciones</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+        ${[['📋','Copia el prompt'],['🤖','Pégalo en Claude.ai + tu material'],['📥','Importa el JSON resultante']].map((s,i)=>`
+          <div style="background:#fff;border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+            <div style="font-size:20px;margin-bottom:4px">${s[0]}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--azul)">PASO ${i+1}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${s[1]}</div>
+          </div>`).join('')}
+      </div>
+      <button onclick="copyPrompt()" id="btn-copy-prompt" style="width:100%;padding:10px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📋 Copiar prompt</button>
+    </div>
+    <div class="form-group">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label class="form-label" style="margin:0">Prompt generado (ya incluye materia, grado y período)</label>
+      </div>
+      <div class="prompt-box" id="prompt-preview">${esc(prompt)}</div>
+    </div>
+  </div>`;
+}
+
+function buildPrompt(mat){
+  return `Eres un asistente pedagógico experto. Genera un Plan de Clase en JSON para:
+
+Materia: ${mat?.nombre||'Sin especificar'}
+Grado: ${appState.grado}
+Período: ${appState.periodo}
+
+REGLAS ESTRICTAS:
+- Devuelve ÚNICAMENTE el objeto JSON. Sin texto previo, sin explicaciones, sin bloques markdown.
+- Respeta EXACTAMENTE los nombres de campo y tipos indicados.
+- Adapta el contenido al material que te proporciono abajo.
+- actividades: siempre tres momentos tipo "I" (Inicio), "D" (Desarrollo), "C" (Cierre).
+- Si la materia NO es religiosa, deja texto_biblico con todos los campos en "".
+- classroom_txt: texto breve para Google Classroom. Si no hay tarea, "".
+
+ESTRUCTURA JSON ESPERADA:
+{
+  "titulo": "",
+  "subtitulo": "",
+  "fase": "SENTIR | PENSAR | ACTUAR | CELEBRAR | vacío si no aplica",
+  "competencia": "",
+  "indicadores": ["indicador 1", "indicador 2"],
+  "peso": "",
+  "instrumento": "",
+  "color": "#1B3A6B",
+  "actividades": [
+    { "tipo": "I", "titulo": "Inicio (~10 min)", "pasos": ["paso 1", "paso 2"] },
+    { "tipo": "D", "titulo": "Desarrollo (~25 min)", "pasos": ["paso 1", "paso 2"] },
+    { "tipo": "C", "titulo": "Cierre (~15 min)", "pasos": ["paso 1", "paso 2"] }
+  ],
+  "texto_biblico": { "cita": "", "texto": "", "contexto": "" },
+  "actividades_cuaderno": [{ "instruccion": "instrucción para el estudiante" }],
+  "metacognicion": "",
+  "recursos": ["recurso 1"],
+  "nota_sustituto": "",
+  "classroom_txt": ""
+}
+
+MATERIAL DEL DOCENTE:
+[Pega aquí tu material: apuntes, fragmento del libro, preguntas, texto bíblico, objetivos, lo que sea]`;
+}
+
+function copyPrompt(){
+  const mat = appState.materias.find(m=>m.id===appState.materiaId);
+  navigator.clipboard.writeText(buildPrompt(mat)).then(()=>{
+    const btn = document.getElementById('btn-copy-prompt');
+    if(btn){ btn.textContent='✓ Copiado!'; btn.style.background='var(--verde)'; setTimeout(()=>{ btn.textContent='📋 Copiar prompt'; btn.style.background='var(--azul)'; },2500); }
+  });
+}
+
+function loadJSON(){
+  const raw = document.getElementById('json-input')?.value||'';
+  const errEl = document.getElementById('json-error');
+  try{
+    const clean = raw.replace(/```json|```/gi,'').trim();
+    const parsed = JSON.parse(clean);
+    if(!parsed.titulo && !parsed.actividades){ errEl.textContent='El JSON no tiene la estructura esperada.'; return; }
+    editorState.form = Object.assign(getEmptyForm(), parsed);
+    editorState.tab = 'manual';
+    const mat = appState.materias.find(m=>m.id===appState.materiaId);
+    renderEditorContent(null, mat);
+    showToast('JSON cargado — revisa y guarda','success');
+  } catch(e){
+    if(errEl) errEl.textContent = 'JSON inválido: ' + e.message;
+  }
+}
+
+// Form helpers
+function setF(k,v){ editorState.form[k]=v; }
+function setBib(k,v){ if(!editorState.form.texto_biblico) editorState.form.texto_biblico={}; editorState.form.texto_biblico[k]=v; }
+function setFormColor(c){ editorState.form.color=c; const mat=appState.materias.find(m=>m.id===appState.materiaId); renderEditorContent(null,mat); }
+function setMomentoTitulo(ai,v){ editorState.form.actividades[ai].titulo=v; }
+function setPaso(ai,pi,v){ editorState.form.actividades[ai].pasos[pi]=v; }
+function addPaso(ai){ editorState.form.actividades[ai].pasos.push(''); const mat=appState.materias.find(m=>m.id===appState.materiaId); renderEditorContent(null,mat); }
+function removePaso(ai,pi){ editorState.form.actividades[ai].pasos.splice(pi,1); const mat=appState.materias.find(m=>m.id===appState.materiaId); renderEditorContent(null,mat); }
+function setCuad(i,v){ editorState.form.actividades_cuaderno[i].instruccion=v; }
+function addCuad(){ editorState.form.actividades_cuaderno.push({instruccion:''}); const mat=appState.materias.find(m=>m.id===appState.materiaId); renderEditorContent(null,mat); }
+function removeCuad(i){ editorState.form.actividades_cuaderno.splice(i,1); const mat=appState.materias.find(m=>m.id===appState.materiaId); renderEditorContent(null,mat); }
+
+// ── SAVE ───────────────────────────────────────────────────────────
+async function saveClase(semana){
+  if(!session.prof?.id){ showToast('Sesión expirada','error'); return; }
+  const btn = document.getElementById('btn-save-main');
+  const status = document.getElementById('save-status');
+  if(btn) btn.disabled = true;
+  if(status) status.textContent = '⏳ Guardando...';
+
+  const f = editorState.form;
+  const payload = {
+    titulo: f.titulo||'',
+    subtitulo: f.subtitulo||'',
+    fase: f.fase||'',
+    competencia: f.competencia||'',
+    indicadores: JSON.stringify(Array.isArray(f.indicadores)?f.indicadores:[]),
+    peso: f.peso||'',
+    instrumento: f.instrumento||'',
+    color: f.color||'#1B3A6B',
+    actividades: JSON.stringify(Array.isArray(f.actividades)?f.actividades:[]),
+    texto_biblico: JSON.stringify(f.texto_biblico||{cita:'',texto:'',contexto:''}),
+    actividades_cuaderno: JSON.stringify(Array.isArray(f.actividades_cuaderno)?f.actividades_cuaderno:[]),
+    metacognicion: f.metacognicion||'',
+    recursos: JSON.stringify(Array.isArray(f.recursos)?f.recursos:[]),
+    nota_sustituto: f.nota_sustituto||'',
+    classroom_txt: f.classroom_txt||'',
+  };
+
+  const { data, error } = await sb.rpc('upsert_clase', {
+    p_profesor_id: session.prof.id,
+    p_pin_hash:    session.pinHash,
+    p_materia_id:  appState.materiaId,
+    p_grado:       appState.grado,
+    p_periodo:     appState.periodo,
+    p_semana:      semana,
+    p_data:        payload,
+  });
+
+  if(error||!data?.ok){
+    showToast('Error al guardar: '+(data?.error||error?.message||'desconocido'),'error');
+    if(btn) btn.disabled=false;
+    if(status) status.textContent='';
+    return;
+  }
+
+  editorState.editingId = data.clase_id;
+  if(status) status.textContent='✓ Guardado';
+  if(btn) btn.disabled=false;
+  showToast('Clase guardada ✓','success');
+
+  // Recargar clases en background
+  reloadClases();
+}
+
+async function toggleActiva(semana){
+  if(!editorState.editingId){ await saveClase(semana); return; }
+  const newState = !editorState.form.activa;
+  const { data } = await sb.rpc('toggle_clase', {
+    p_profesor_id: session.prof.id,
+    p_pin_hash:    session.pinHash,
+    p_clase_id:    editorState.editingId,
+    p_activa:      newState,
+  });
+  if(data?.ok){
+    editorState.form.activa = newState;
+    const btn = document.getElementById('btn-toggle');
+    if(btn){ btn.className=newState?'btn-toggle-on':'btn-toggle-off'; btn.textContent=newState?'⬜ Desactivar':'✅ Publicar'; }
+    showToast(newState?'✅ Clase publicada':'Clase desactivada', newState?'success':'');
+    reloadClases();
+  }
+}
+
+async function reloadClases(){
+  if(!session.prof?.id) return;
+  const { data } = await sb.rpc('get_clases_profesor', { p_profesor_id: session.prof.id, p_pin_hash: session.pinHash });
+  if(data?.ok) appState.clases = data.data||[];
+}
+
+function backToGrid(){
+  editorState = { clase:null, tab:'manual', form:null, editingId:null };
+  showWeekGrid();
+}
+
+// ── ADMIN PANEL ─────────────────────────────────────────────────────
+async function showAdminPanel(){
+  const panel = document.getElementById('main-panel');
+  panel.innerHTML = '<div class="page-spinner"><div class="spinner"></div>Cargando...</div>';
+
+  const { data } = await sb.rpc('admin_get_profesores', { p_admin_hash: session.adminHash || session.pinHash });
+  if(!data?.ok){ panel.innerHTML='<div style="padding:20px;color:var(--rojo)">No autorizado</div>'; return; }
+
+  const profs = data.data || [];
+  panel.innerHTML = `
+    <div style="margin-bottom:24px">
+      <div style="font-size:18px;font-weight:700;color:var(--azul);margin-bottom:4px">👥 Gestión de Docentes</div>
+      <div style="font-size:13px;color:var(--sub)">${profs.length} docente${profs.length!==1?'s':''} registrado${profs.length!==1?'s':''}</div>
+    </div>
+
+    <div class="admin-section">
+      <h3>➕ Crear nuevo docente</h3>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="new-nombre" placeholder="Prof. María García"></div>
+        <div class="form-group"><label class="form-label">PIN (6 dígitos)</label><input class="form-input" id="new-pin" type="password" maxlength="6" inputmode="numeric" placeholder="······"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Materias (una por línea)</label>
+        <textarea class="form-textarea" id="new-materias" rows="3" placeholder="FIHR&#10;Educación Religiosa&#10;Ética"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">Color principal</label>
+        <div class="color-swatches" id="new-color-swatches">
+          ${COLORES.map((c,i)=>`<div class="color-swatch${i===0?' sel':''}" style="background:${c}" onclick="selectNewColor('${c}',this)"></div>`).join('')}
+        </div>
+      </div>
+      <button onclick="crearDocente()" style="padding:10px 24px;background:var(--verde);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✅ Crear docente</button>
+      <div id="create-status" style="margin-top:8px;font-size:13px"></div>
+    </div>
+
+    <div class="admin-section">
+      <h3>👤 Docentes registrados</h3>
+      ${profs.length===0?'<div style="color:var(--sub);font-size:13px">No hay docentes registrados aún.</div>':profs.map(p=>`
+        <div class="prof-card">
+          <div class="pc-avatar" style="background:${p.color_1||'#1B3A6B'}20">${p.icono||'📚'}</div>
+          <div class="pc-info">
+            <div class="pc-name">${esc(p.nombre)}</div>
+            <div class="pc-sub">${p.materias?p.materias.map(m=>m.nombre).join(' · '):'Sin materias'}</div>
+          </div>
+          <div class="status-dot" style="background:${p.activo?'var(--verde)':'#CCC'}"></div>
+        </div>`).join('')}
+    </div>
+  `;
+  window._newColor = COLORES[0];
+}
+
+function selectNewColor(c, el){
+  window._newColor = c;
+  document.querySelectorAll('#new-color-swatches .color-swatch').forEach(s=>s.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+async function crearDocente(){
+  const nombre = document.getElementById('new-nombre')?.value?.trim();
+  const pin    = document.getElementById('new-pin')?.value?.trim();
+  const mats   = document.getElementById('new-materias')?.value?.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const status = document.getElementById('create-status');
+
+  if(!nombre){ if(status) status.textContent='El nombre es obligatorio'; return; }
+  if(!pin || pin.length!==6 || !/^\d+$/.test(pin)){ if(status) status.textContent='El PIN debe ser de 6 dígitos numéricos'; return; }
+  if(!mats?.length){ if(status) status.textContent='Agrega al menos una materia'; return; }
+
+  if(status) status.textContent='⏳ Creando...';
+
+  const hash = await sha256(pin);
+  const { data } = await sb.rpc('admin_crear_profesor', {
+    p_admin_hash: session.adminHash||session.pinHash,
+    p_nombre:     nombre,
+    p_pin_hash:   hash,
+    p_color_1:    window._newColor||'#1B3A6B',
+    p_color_2:    '#0D2B52',
+    p_icono:      '📚',
+  });
+
+  if(!data?.ok){ if(status) status.textContent='Error: '+(data?.error||'desconocido'); return; }
+
+  // Crear materias
+  for(const m of mats){
+    await sb.rpc('admin_crear_materia', {
+      p_admin_hash:  session.adminHash||session.pinHash,
+      p_profesor_id: data.id,
+      p_nombre:      m,
+      p_color:       window._newColor||'#1B3A6B',
+      p_icono:       '📚',
+    });
+  }
+
+  if(status) status.textContent='✅ Docente creado correctamente';
+  showToast('Docente creado ✓','success');
+  setTimeout(()=>showAdminPanel(), 1500);
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='show'+(type?' '+type:'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&editorState.form) backToGrid(); });
+</script>
+</body>
+</html>

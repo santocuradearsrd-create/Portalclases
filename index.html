@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Portal de Clases · CESCAR</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --azul:#1B3A6B;--azul-cl:#DCE8F5;--verde:#1B5E20;--verde-cl:#E8F5E9;
+  --teal:#006064;--morado:#4A148C;--morado-cl:#EDE7F6;
+  --dorado:#7B5800;--dorado-cl:#FFF8DC;--gris:#37474F;--rojo:#B71C1C;
+  --bg:#F0F4F8;--card:#fff;--txt:#1A1A1A;--sub:#555;--border:#E0E0E0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* NAV */
+nav{background:var(--azul);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.nav-inner{display:flex;align-items:center;gap:10px;padding:10px 16px}
+.logo{font-size:17px;font-weight:700;flex:1;user-select:none;cursor:default}
+.logo span{font-size:11px;opacity:.7;display:block;font-weight:400;margin-top:1px}
+
+/* GRADE BAR */
+.grade-bar{display:flex;overflow-x:auto;scrollbar-width:none;padding:6px 10px;gap:6px;background:rgba(0,0,0,.18);border-top:1px solid rgba(255,255,255,.1)}
+.grade-bar::-webkit-scrollbar{display:none}
+.grade-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;cursor:pointer;transition:.2s;border:1.5px solid transparent;background:rgba(255,255,255,.07);min-width:72px}
+.grade-btn:hover{background:rgba(255,255,255,.15)}
+.grade-btn.active{background:#fff;border-color:#fff}
+.grade-btn svg{width:36px;height:36px}
+.grade-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap}
+.grade-btn.active .grade-label{color:var(--azul)}
+
+/* MATERIA BAR */
+.materia-bar{background:#fff;border-bottom:2px solid var(--border);display:flex;gap:0;overflow-x:auto;scrollbar-width:none;min-height:44px;align-items:stretch}
+.materia-bar::-webkit-scrollbar{display:none}
+.materia-tab{padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;color:var(--sub);white-space:nowrap;transition:.2s;display:flex;align-items:center;gap:6px}
+.materia-tab:hover{color:var(--azul);background:#F8FAFD}
+.materia-tab.active{color:var(--azul);border-bottom-color:var(--azul);background:#F0F6FF}
+
+/* PERIOD BAR */
+.period-bar-wrap{background:#F8FAFD;border-bottom:1px solid var(--border)}
+.period-bar{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;max-width:900px;margin:0 auto}
+.period-bar::-webkit-scrollbar{display:none}
+.period-tab{padding:8px 20px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;color:var(--sub);white-space:nowrap;transition:.2s}
+.period-tab:hover{color:var(--azul)}
+.period-tab.active{color:var(--azul);border-bottom-color:var(--azul)}
+
+/* MAIN */
+main{max-width:900px;margin:0 auto;padding:20px 16px}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--sub)}
+.empty .icon{font-size:52px;margin-bottom:14px}
+.empty h3{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--txt)}
+.empty p{font-size:14px;line-height:1.6}
+
+/* WEEK CARD */
+.week-card{background:var(--card);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.09);overflow:hidden;margin-bottom:22px}
+.week-header{padding:18px 22px;color:#fff;position:relative}
+.week-header .fase-badge{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;opacity:.8;margin-bottom:5px;font-weight:600}
+.week-header h2{font-size:20px;font-weight:700;margin-bottom:4px;line-height:1.3}
+.week-header .week-meta{font-size:12px;opacity:.85}
+.week-num{position:absolute;top:16px;right:18px;width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
+.materia-badge{display:inline-flex;align-items:center;gap:5px;margin-bottom:8px;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* INFO BAR */
+.info-bar{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.info-item{padding:9px 14px;border-right:1px solid var(--border);min-width:100px}
+.info-item:last-child{border-right:none}
+.info-lbl{font-size:10px;text-transform:uppercase;color:#999;letter-spacing:.5px}
+.info-val{font-size:13px;font-weight:700;margin-top:2px}
+
+/* SECTIONS */
+.section{padding:14px 20px;border-bottom:1px solid #F5F5F5}
+.section:last-child{border-bottom:none}
+.sec-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid currentColor}
+
+/* MOMENTS */
+.moment{display:flex;gap:12px;margin-bottom:10px;padding:11px;border-radius:8px}
+.m-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;color:#fff}
+.m-body h4{font-size:13px;font-weight:700;margin-bottom:5px}
+.m-body ul{padding-left:16px;font-size:13px;line-height:1.75}
+.I-m{background:#EEF2FF}.I-m .m-badge{background:#3949AB}
+.D-m{background:#E8F5E9}.D-m .m-badge{background:#2E7D32}
+.C-m{background:#FFF3E0}.C-m .m-badge{background:#E65100}
+
+/* BIBLE */
+.bible-box{background:#EDE7F6;border-left:4px solid var(--morado);padding:12px 14px;border-radius:0 8px 8px 0;font-style:italic;font-size:13px;line-height:1.75;margin:6px 0}
+.bible-box strong{font-style:normal;color:var(--morado)}
+
+/* CLASSROOM */
+.classroom-box{background:#F8F9FA;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.classroom-header{background:#1B3A6B;color:#fff;padding:8px 14px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.classroom-body{padding:12px 14px;font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;font-family:monospace}
+.copy-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 10px;border-radius:12px;cursor:pointer;font-size:11px;font-weight:700;transition:.2s}
+.copy-btn:hover{background:rgba(255,255,255,.35)}
+.copy-btn.copied{background:#FFD54F;color:#1B5E20;border-color:#FFD54F}
+
+/* CUADERNO */
+.cuaderno-step{background:#F8F9FA;border-left:4px solid var(--azul);padding:10px 14px;margin-bottom:8px;border-radius:0 6px 6px 0}
+.cuaderno-step p{font-size:13px;line-height:1.65}
+
+/* RUBRICA */
+.rubrica-table{width:100%;border-collapse:collapse;font-size:12px}
+.rubrica-table th{padding:7px;text-align:center;font-size:11px;color:#fff}
+.rubrica-table td{padding:7px 8px;border:1px solid #DDD;vertical-align:top}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag{background:var(--azul-cl);border:1px solid #9BBFED;color:var(--azul);padding:3px 9px;border-radius:4px;font-size:12px}
+
+/* META / NOTE */
+.meta-box{background:var(--dorado-cl);border-left:4px solid var(--dorado);padding:11px 14px;border-radius:0 6px 6px 0;font-style:italic;font-size:13px;line-height:1.65}
+.meta-box strong{font-style:normal;color:var(--dorado)}
+.note-box{background:#F8F9FA;border:1px solid var(--border);padding:11px 14px;border-radius:6px;font-size:13px;line-height:1.65;color:var(--sub)}
+
+/* SPINNER */
+.page-spinner{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:var(--sub)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--azul);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--gris);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{background:var(--verde)}
+
+/* COPY PROTECTION */
+.content-text{user-select:none;-webkit-user-select:none}
+#copy-toast{display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1B3A6B;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none}
+
+@media(max-width:600px){
+  main{padding:12px 10px}
+  .week-header h2{font-size:17px}
+  .grade-btn{min-width:60px;padding:6px 10px}
+}
+@media print{nav,#toast{display:none!important}.week-card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div id="copy-toast">✏️ Escribe en tu cuaderno — el esfuerzo de escribir ayuda a aprender</div>
+
+<script>
+document.addEventListener('copy',function(e){
+  var s=window.getSelection();
+  if(s&&s.toString().length>0){e.clipboardData.setData('text/plain','');e.preventDefault();showCopyToast();}
+});
+document.addEventListener('contextmenu',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.closest('.copy-btn'))return;
+  e.preventDefault();showCopyToast();
+});
+document.addEventListener('selectstart',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.closest('.copy-btn'))return;
+  e.preventDefault();
+});
+function showCopyToast(){var el=document.getElementById('copy-toast');el.style.display='block';clearTimeout(window._ct);window._ct=setTimeout(function(){el.style.display='none';},2800);}
+</script>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      📚 Portal de Clases
+      <span>CESCAR (Santo Cura de Ars)</span>
+    </div>
+    <a href="docente.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none">🔑 Docentes</a>
+  </div>
+  <div class="grade-bar" id="grade-bar"></div>
+</nav>
+
+<div style="background:#fff;border-bottom:1px solid var(--border)">
+  <div class="materia-bar" id="materia-bar"></div>
+</div>
+<div class="period-bar-wrap">
+  <div class="period-bar" id="period-bar"></div>
+</div>
+
+<main id="main-content">
+  <div class="page-spinner"><div class="spinner"></div>Cargando...</div>
+</main>
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL  = 'https://famdtakcyifspscmphiy.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhbWR0YWtjeWlmc3BzY21waGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzMTMzNDMsImV4cCI6MjA5MDg4OTM0M30.4bQVm39uwPP9W5BZrfyvmeaCdSy-Dx0yqDn2Ws8w0Fo';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const GRADOS = [
+  { id:'1ro', label:'1er Grado' },
+  { id:'2do', label:'2do Grado' },
+  { id:'3ro', label:'3er Grado' },
+  { id:'4to', label:'4to Grado' },
+  { id:'5to', label:'5to Grado' },
+  { id:'6to', label:'6to Grado' },
+];
+
+// SVGs de evolución semilla → árbol
+const GRADE_SVG = {
+  '1ro': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="20" cy="32" rx="7" ry="5" fill="#8B6914" opacity=".7"/>
+    <ellipse cx="20" cy="28" rx="5" ry="7" fill="#5D8A3C"/>
+    <line x1="20" y1="37" x2="20" y2="42" stroke="#8B6914" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="20" cy="22" r="3" fill="#7CB342" opacity=".8"/>
+  </svg>`,
+  '2do': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="20" y1="44" x2="20" y2="28" stroke="#795548" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="16" cy="30" rx="7" ry="5" fill="#66BB6A" transform="rotate(-20 16 30)"/>
+    <ellipse cx="24" cy="26" rx="7" ry="5" fill="#4CAF50" transform="rotate(15 24 26)"/>
+    <circle cx="20" cy="22" r="5" fill="#81C784"/>
+  </svg>`,
+  '3ro': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="17" y="32" width="6" height="12" rx="2" fill="#6D4C41"/>
+    <ellipse cx="13" cy="26" rx="9" ry="7" fill="#4CAF50"/>
+    <ellipse cx="27" cy="24" rx="9" ry="7" fill="#388E3C"/>
+    <ellipse cx="20" cy="20" rx="11" ry="9" fill="#66BB6A"/>
+  </svg>`,
+  '4to': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="16" y="30" width="8" height="14" rx="3" fill="#5D4037"/>
+    <ellipse cx="11" cy="24" rx="10" ry="8" fill="#388E3C"/>
+    <ellipse cx="29" cy="22" rx="10" ry="8" fill="#2E7D32"/>
+    <ellipse cx="20" cy="16" rx="13" ry="10" fill="#43A047"/>
+    <circle cx="20" cy="10" r="7" fill="#66BB6A"/>
+  </svg>`,
+  '5to': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="16" y="30" width="8" height="14" rx="3" fill="#4E342E"/>
+    <ellipse cx="10" cy="22" rx="11" ry="9" fill="#2E7D32"/>
+    <ellipse cx="30" cy="20" rx="11" ry="9" fill="#1B5E20"/>
+    <ellipse cx="20" cy="14" rx="14" ry="11" fill="#388E3C"/>
+    <circle cx="20" cy="7" r="7" fill="#4CAF50"/>
+    <circle cx="13" cy="18" r="3.5" fill="#E53935"/>
+    <circle cx="27" cy="16" r="3" fill="#E53935"/>
+    <circle cx="21" cy="22" r="3" fill="#FF7043"/>
+  </svg>`,
+  '6to': `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="28" width="10" height="16" rx="4" fill="#3E2723"/>
+    <ellipse cx="9" cy="20" rx="12" ry="10" fill="#1B5E20"/>
+    <ellipse cx="31" cy="18" rx="12" ry="10" fill="#1B5E20"/>
+    <ellipse cx="20" cy="12" rx="15" ry="12" fill="#2E7D32"/>
+    <circle cx="20" cy="5" r="7" fill="#43A047"/>
+    <circle cx="11" cy="16" r="4" fill="#E53935"/>
+    <circle cx="29" cy="14" r="3.5" fill="#FF7043"/>
+    <circle cx="20" cy="20" r="3.5" fill="#E53935"/>
+    <circle cx="15" cy="8" r="3" fill="#FFB300"/>
+    <circle cx="26" cy="9" r="3" fill="#FFB300"/>
+  </svg>`,
+};
+
+const GRADE_COLORS = {
+  '1ro':'#7CB342','2do':'#26A69A','3ro':'#1976D2',
+  '4to':'#5E35B1','5to':'#E53935','6to':'#FF8F00'
+};
+
+let state = { grado: GRADOS[0].id, materia: null, periodo: 1, materias: [] };
+
+// URL params
+const urlP = new URLSearchParams(location.search);
+if(urlP.has('grado')) state.grado = urlP.get('grado');
+if(urlP.has('periodo')) state.periodo = parseInt(urlP.get('periodo'))||1;
+
+init();
+
+async function init(){
+  renderGradeBar();
+  await loadMaterias();
+  renderPeriodBar();
+  loadClases();
+}
+
+function renderGradeBar(){
+  const bar = document.getElementById('grade-bar');
+  bar.innerHTML = GRADOS.map(g => {
+    const col = GRADE_COLORS[g.id]||'#fff';
+    const isActive = g.id === state.grado;
+    return `<div class="grade-btn${isActive?' active':''}" onclick="selectGrado('${g.id}')" style="${isActive?'':''}">
+      ${GRADE_SVG[g.id]}
+      <span class="grade-label">${g.label}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadMaterias(){
+  document.getElementById('materia-bar').innerHTML = '<div style="padding:10px 16px;font-size:12px;color:#AAA">Cargando materias...</div>';
+  const { data, error } = await sb.rpc('get_materias_por_grado', { p_grado: state.grado });
+  state.materias = data || [];
+  if(state.materias.length > 0){
+    if(!state.materia || !state.materias.find(m=>m.id===state.materia)){
+      state.materia = state.materias[0].id;
+    }
+  } else {
+    state.materia = null;
+  }
+  renderMateriaBar();
+}
+
+function renderMateriaBar(){
+  const bar = document.getElementById('materia-bar');
+  if(!state.materias.length){
+    bar.innerHTML = '<div style="padding:10px 16px;font-size:12px;color:#AAA;font-style:italic">Sin materias con contenido publicado para este grado</div>';
+    return;
+  }
+  bar.innerHTML = state.materias.map(m => `
+    <div class="materia-tab${m.id===state.materia?' active':''}"
+         style="${m.id===state.materia?'border-bottom-color:'+m.color+';color:'+m.color:''}"
+         onclick="selectMateria('${m.id}')">
+      <span>${m.icono||'📚'}</span>
+      <span>${esc(m.nombre)}</span>
+    </div>
+  `).join('');
+}
+
+function renderPeriodBar(){
+  const bar = document.getElementById('period-bar');
+  bar.innerHTML = [1,2,3,4].map(p => `
+    <div class="period-tab${p===state.periodo?' active':''}" onclick="selectPeriodo(${p})">Período ${p}</div>
+  `).join('');
+}
+
+async function selectGrado(g){
+  state.grado = g;
+  renderGradeBar();
+  await loadMaterias();
+  renderPeriodBar();
+  loadClases();
+  updateURL();
+}
+function selectMateria(id){ state.materia = id; renderMateriaBar(); loadClases(); }
+function selectPeriodo(p){ state.periodo = p; renderPeriodBar(); loadClases(); updateURL(); }
+
+function updateURL(){
+  const u = new URL(location);
+  u.searchParams.set('grado', state.grado);
+  u.searchParams.set('periodo', state.periodo);
+  history.replaceState({}, '', u);
+}
+
+async function loadClases(){
+  const mc = document.getElementById('main-content');
+  mc.innerHTML = '<div class="page-spinner"><div class="spinner"></div>Cargando semanas...</div>';
+  if(!state.materia){ mc.innerHTML = renderEmpty('Sin contenido', 'El docente publicará las clases próximamente.'); return; }
+
+  const { data } = await sb.rpc('get_portal_clases', { p_grado: state.grado, p_periodo: state.periodo });
+  const clases = (data||[]).filter(c => c.materia_id === state.materia);
+
+  if(!clases.length){
+    mc.innerHTML = renderEmpty('📅 Sin clases publicadas', 'El docente aún no ha publicado clases para este período.');
+    return;
+  }
+
+  mc.innerHTML = clases.map(c => renderClaseCard(c)).join('');
+}
+
+function renderEmpty(titulo, msg){
+  return `<div class="empty"><div class="icon">📅</div><h3>${titulo}</h3><p>${msg}</p></div>`;
+}
+
+function renderClaseCard(c){
+  const color = c.color || '#1B3A6B';
+  const inds = parseJ(c.indicadores, []);
+  const actvs = parseJ(c.actividades, []);
+  const cuad = parseJ(c.actividades_cuaderno, []);
+  const rubrica = parseJ(c.rubrica, null);
+  const recursos = parseJ(c.recursos, []);
+  const bib = parseJ(c.texto_biblico, null);
+
+  return `<div class="week-card">
+    <div class="week-header" style="background:linear-gradient(135deg,${color},${color}CC)">
+      <div class="materia-badge">${esc(c.materia_icono||'📚')} ${esc(c.materia_nombre||'')}</div>
+      <div class="fase-badge">Semana ${c.semana} · ${esc(c.fase||'')}</div>
+      <h2>${esc(c.titulo)}</h2>
+      <div class="week-meta">${esc(c.subtitulo||'')} · ${c.grado} · P${c.periodo}</div>
+      <div class="week-num">${c.semana}</div>
+    </div>
+
+    ${(c.competencia||inds.length||c.instrumento||c.peso)?`<div class="info-bar">
+      ${c.competencia?`<div class="info-item"><div class="info-lbl">Competencia</div><div class="info-val" style="font-size:11px">${esc(c.competencia)}</div></div>`:''}
+      ${inds.length?`<div class="info-item"><div class="info-lbl">Indicadores</div><div class="info-val" style="font-size:11px">${inds.join(' · ')}</div></div>`:''}
+      ${c.instrumento?`<div class="info-item"><div class="info-lbl">Instrumento</div><div class="info-val">${esc(c.instrumento)}</div></div>`:''}
+      ${c.peso?`<div class="info-item"><div class="info-lbl">Peso</div><div class="info-val" style="color:var(--rojo)">${esc(c.peso)}</div></div>`:''}
+    </div>`:''}
+
+    ${bib&&bib.texto?`<div class="section">
+      <div class="sec-title" style="color:var(--morado)">Texto bíblico</div>
+      <div class="bible-box content-text">
+        <strong>${esc(bib.cita||'')}</strong><br><br>
+        ${esc(bib.texto)}
+        ${bib.contexto?`<div style="margin-top:8px;font-style:normal;font-size:12px;color:var(--sub)">${esc(bib.contexto)}</div>`:''}
+      </div>
+    </div>`:''}
+
+    ${actvs.length?`<div class="section">
+      <div class="sec-title" style="color:${color}">Secuencia de la clase</div>
+      ${actvs.map(a=>`<div class="moment ${a.tipo}-m">
+        <div class="m-badge">${esc(a.tipo)}</div>
+        <div class="m-body">
+          <h4>${esc(a.titulo)}</h4>
+          <ul class="content-text">${(a.pasos||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+        </div>
+      </div>`).join('')}
+    </div>`:''}
+
+    ${cuad.length?`<div class="section">
+      <div class="sec-title" style="color:${color}">Actividades en el cuaderno</div>
+      ${cuad.map((a,i)=>`<div class="cuaderno-step">
+        <p class="content-text"><strong>${i+1}.</strong> ${esc(a.instruccion)}</p>
+      </div>`).join('')}
+    </div>`:''}
+
+    ${c.classroom_txt?`<div class="section">
+      <div class="sec-title" style="color:var(--verde)">Tarea para Google Classroom</div>
+      <div class="classroom-box">
+        <div class="classroom-header">Copiar en Google Classroom
+          <button class="copy-btn" onclick="copyText(this,'${escapeSQ(c.classroom_txt)}')">Copiar</button>
+        </div>
+        <div class="classroom-body">${esc(c.classroom_txt)}</div>
+      </div>
+    </div>`:''}
+
+    ${c.metacognicion?`<div class="section">
+      <div class="sec-title" style="color:var(--dorado)">Reflexión</div>
+      <div class="meta-box content-text"><strong>Pregunta:</strong> ${esc(c.metacognicion)}</div>
+    </div>`:''}
+
+    ${rubrica&&rubrica.criterios?`<div class="section">
+      <div class="sec-title" style="color:var(--gris)">Rúbrica</div>
+      <div style="overflow-x:auto">
+        <table class="rubrica-table">
+          <tr>
+            <th style="background:var(--gris);text-align:left;padding:7px">Criterio</th>
+            <th style="background:#1B5E20">Excelente</th>
+            <th style="background:#0D47A1">Logrado</th>
+            <th style="background:#E65100">En Proceso</th>
+            <th style="background:#B71C1C">Inicio</th>
+          </tr>
+          ${rubrica.criterios.map(r=>`<tr>
+            <td style="background:var(--azul-cl);font-weight:600">${esc(r.nombre)}</td>
+            <td style="background:#E8F5E9">${esc(r.niveles?.excelente||'')}</td>
+            <td>${esc(r.niveles?.logrado||'')}</td>
+            <td>${esc(r.niveles?.proceso||'')}</td>
+            <td style="background:#FFEBEE">${esc(r.niveles?.inicio||'')}</td>
+          </tr>`).join('')}
+        </table>
+      </div>
+    </div>`:''}
+
+    ${recursos.length?`<div class="section">
+      <div class="sec-title" style="color:var(--verde)">Recursos</div>
+      <div class="tags">${recursos.map(r=>`<span class="tag">${esc(r)}</span>`).join('')}</div>
+    </div>`:''}
+
+    ${c.nota_sustituto?`<div class="section">
+      <div class="sec-title" style="color:var(--gris)">Nota para sustituto/a</div>
+      <div class="note-box">${esc(c.nota_sustituto)}</div>
+    </div>`:''}
+  </div>`;
+}
+
+function parseJ(v,fb){if(!v)return fb;if(typeof v==='object')return v;try{return JSON.parse(v);}catch{return fb;}}
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escapeSQ(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');}
+
+function copyText(btn,txt){
+  const text = txt.replace(/\\n/g,'\n').replace(/\\'/g,"'").replace(/\\\\/g,'\\');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='¡Copiado!'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  });
+}
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show'+(type?' '+type:'');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.className='',2800);
+}
+</script>
+</body>
+</html>
