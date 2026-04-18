@@ -45,17 +45,20 @@ nav{background:var(--azul);color:#fff;padding:12px 20px;display:flex;align-items
 .sidebar-btn:hover{background:var(--azul-cl);border-color:#9BBFED;color:var(--azul)}
 .sidebar-btn.active{background:var(--azul-cl);border-color:#9BBFED;color:var(--azul)}
 .week-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:20px}
-.week-tile{background:#fff;border-radius:10px;padding:14px;border:1.5px solid var(--border);cursor:pointer;transition:.15s;position:relative}
-.week-tile:hover{border-color:#9BBFED;box-shadow:0 2px 10px rgba(0,0,0,.08);transform:translateY(-1px)}
-.week-tile.has-content{border-left:4px solid var(--azul)}
-.week-tile.is-active{background:#F0FFF4;border-color:#81C784}
+.week-tile{background:#fff;border-radius:12px;padding:14px 16px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.week-tile:hover{box-shadow:0 4px 16px rgba(0,0,0,.12);transform:translateY(-2px);border-color:#9BBFED}
+.week-tile.has-content{border:none;background:linear-gradient(145deg,var(--tc,#1B3A6B) 0%,var(--tc,#1B3A6B) 4px,#fff 4px)}
+.week-tile.has-content::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--tc,#1B3A6B)}
+.week-tile.has-content{border:1.5px solid color-mix(in srgb, var(--tc,#1B3A6B) 20%, #fff);padding-left:18px}
+.week-tile.is-active{background:linear-gradient(145deg,#fff 0%,#F0FFF8 100%);border-color:#66BB6A;box-shadow:0 2px 12px rgba(76,175,80,.15)}
+.week-tile.is-active::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 20px 20px 0;border-color:transparent #4CAF50 transparent transparent}
 .wt-num{font-size:10px;font-weight:700;color:#AAA;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
 .wt-title{font-size:13px;font-weight:600;color:var(--txt);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wt-badges{display:flex;gap:4px;flex-wrap:wrap}
-.wt-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600}
-.wt-on{background:#E8F5E9;color:var(--verde)}
-.wt-off{background:#F5F5F5;color:#888}
-.wt-empty{background:#F0F4F8;color:#AAA;font-style:italic}
+.wt-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.wt-on{background:linear-gradient(135deg,#43A047,#2E7D32);color:#fff;box-shadow:0 1px 4px rgba(46,125,50,.3)}
+.wt-off{background:#ECEFF1;color:#78909C}
+.wt-empty{background:#F5F5F5;color:#BDBDBD;font-style:italic}
 .editor-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
 .editor-back{padding:7px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--txt)}
 .editor-back:hover{background:var(--azul-cl)}
@@ -313,7 +316,7 @@ function showGrid(){
   for(let s=1;s<=12;s++){
     const c=claseMap[s];
     if(c){
-      html+=`<div class="week-tile has-content${c.activa?' is-active':''}" style="border-left-color:${color}" onclick="openEditor(${s})">
+      html+=`<div class="week-tile has-content${c.activa?' is-active':''}" style="--tc:${color}" onclick="openEditor(${s})">
         <div class="wt-num">Semana ${s}</div>
         <div class="wt-title">${esc(c.titulo||'Sin título')}</div>
         <div class="wt-badges">
@@ -396,6 +399,7 @@ function renderEditor(mat){
         ${E.activa?'⬜ Despublicar':'✅ Publicar al estudiante'}
       </button>
       <span id="save-msg" style="font-size:12px;color:#AAA;margin-left:8px"></span>
+      ${!E.activa?'<span style="margin-left:auto;font-size:11px;color:#E65100;background:#FFF3E0;border:1px solid #FFCC80;padding:4px 10px;border-radius:6px;font-weight:600">⚠️ Guarda y luego Publica para que los estudiantes vean el contenido</span>':''}
     </div>`;
   renderEditorBody();
 }
@@ -620,14 +624,21 @@ function reRender(){const m=A.materias.find(m=>m.id===A.materiaId);renderEditor(
 async function saveClase(){
   const btn=document.getElementById('btn-save');
   const msg=document.getElementById('save-msg');
-  if(btn)btn.disabled=true;
-  if(msg)msg.textContent='⏳ Guardando...';
 
   const f=E.form;
 
-  // ── FIX: enviar arrays/objetos directamente, no strings
-  // Supabase serializa el objeto JSONB correctamente
-  const payload={
+  // Validación: no guardar vacío
+  if(!f.titulo||!f.titulo.trim()){
+    showToast('⚠️ El título está vacío — carga el JSON primero','error');
+    return;
+  }
+
+  if(btn)btn.disabled=true;
+  if(msg)msg.textContent='⏳ Guardando...';
+
+  // Serializar todo como JSON string explícito para garantizar
+  // que Supabase recibe JSONB válido sin ambigüedad
+  const payload=JSON.stringify({
     titulo:          f.titulo||'',
     subtitulo:       f.subtitulo||'',
     fase:            f.fase||'',
@@ -643,7 +654,9 @@ async function saveClase(){
     recursos:        Array.isArray(f.recursos)?f.recursos:[],
     nota_sustituto:  f.nota_sustituto||'',
     classroom_txt:   f.classroom_txt||'',
-  };
+  });
+
+  console.log('Guardando clase — titulo:', f.titulo, '| semana:', E.semana);
 
   const {data,error}=await sb.rpc('upsert_clase',{
     p_profesor_id: S.prof.id,
@@ -660,12 +673,13 @@ async function saveClase(){
   if(error||!data?.ok){
     showToast('Error al guardar: '+(data?.error||error?.message||'desconocido'),'error');
     if(msg)msg.textContent='';
+    console.error('Error save:', error, data);
     return;
   }
 
   E.claseId=data.clase_id;
   if(msg)msg.textContent='✓ Guardado';
-  showToast('Clase guardada ✓','success');
+  showToast('✓ Guardado: "'+f.titulo.slice(0,40)+'"','success');
   setTimeout(()=>{if(msg)msg.textContent='';},3000);
   reloadClases();
 }
