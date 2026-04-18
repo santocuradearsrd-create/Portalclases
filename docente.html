@@ -544,6 +544,28 @@ function renderManual(){
     </div>
 
     <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-card-title" style="color:var(--gris);margin-bottom:0">📊 Rúbrica de evaluación</div>
+        <span style="font-size:10px;background:#F0F4F8;color:#888;padding:3px 8px;border-radius:10px;font-weight:600">Opcional</span>
+      </div>
+      <div style="font-size:11px;color:#AAA;margin-bottom:10px;line-height:1.5">
+        Visible para estudiantes, supervisores y sustitutos. Define los criterios con los que se evaluará el trabajo.
+      </div>
+      ${renderRubricaBlock()}
+    </div>
+
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-card-title" style="color:var(--azul);margin-bottom:0">🖼️ Recursos visuales</div>
+        <span style="font-size:10px;background:#F0F6FF;color:var(--azul);padding:3px 8px;border-radius:10px;font-weight:600">máx 5 · 800KB c/u</span>
+      </div>
+      <div style="font-size:11px;color:#AAA;margin-bottom:10px;line-height:1.5">
+        Imágenes de planos, diagramas o ejercicios. Los estudiantes las verán en carousel. Solo JPG, PNG o WebP.
+      </div>
+      <div id="img-section">${renderImageBlock()}</div>
+    </div>
+
+    <div class="section-card">
       <div class="section-card-title" style="color:var(--gris)">📝 Nota para sustituto/a</div>
       <textarea class="form-textarea" rows="3" oninput="setF('nota_sustituto',this.value)">${esc(f.nota_sustituto||'')}</textarea>
     </div>
